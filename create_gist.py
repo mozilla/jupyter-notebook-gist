@@ -1,7 +1,6 @@
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 import requests
-import iampython
 import json
 
 class AuthorizeHandler(IPythonHandler):
@@ -47,18 +46,8 @@ class AuthorizeHandler(IPythonHandler):
         print("Saving gist. . .")
         # TODO : Validate the token
         response = requests.post("https://api.github.com/gists", 
-            data = {
-            'description' : 'My python file',
-            'files' : {
-                "a.txt" : {
-                    "content" : "I am a python file"
-                    },
-                "b.txt" : {
-                    "content" : "I am also a python file"
-                    }
-                }
-            },
-            headers = { "Authorization" : "token " + access_token })
+            data = pyFiles,
+            headers = tokenDict)
 
         print(response.content)
 
@@ -75,5 +64,5 @@ def load_jupyter_server_extension(nb_server_app):
     """
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
-    route_pattern1 = url_path_join(web_app.settings['base_url'], '/authorize')
-    web_app.add_handlers(host_pattern, [(route_pattern1, AuthorizeHandler)])
+    route_pattern = url_path_join(web_app.settings['base_url'], '/authorize')
+    web_app.add_handlers(host_pattern, [(route_pattern, AuthorizeHandler)])
