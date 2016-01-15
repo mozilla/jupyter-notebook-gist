@@ -16,9 +16,9 @@ cm.update('notebook', {"load_extensions": {"gist": True}})
 
 */
 define( function () {
-    
-    var github_client_id = "bd8256a4bcc8042c8152";
-    var github_redirect_uri = "http://localhost:8888/authorize";
+
+    var github_client_id = "a179eb5f91edcc084d8b";
+    var github_redirect_uri = "http://localhost:8888/create_gist";
 
     var gist_notebook = function () {
 
@@ -46,12 +46,12 @@ define( function () {
             ]);
         }
     };
-    
+
     var load_ipython_extension = function () {
         gist_button();
     };
-    
+
     return {
         load_ipython_extension: load_ipython_extension
-    }; 
+    };
 });

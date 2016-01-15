@@ -4,25 +4,22 @@ import requests
 import json
 import config
 
-class AuthorizeHandler(IPythonHandler):
+class GistHandler(IPythonHandler):
     def get(self):
         print("Extracting code . . .")
-
         args = self.request.arguments
-
-        access_code = args["code"][0]
-        access_code = access_code.decode('ascii')
-
+        access_code = args["code"][0].decode('ascii')
         response = requests.post("https://github.com/login/oauth/access_token",
-            data = {"client_id": config.OAUTH_CLIENT_ID,
-            "client_secret" : config.OAUTH_CLIENT_SECRET,
-            "code" : access_code,
-            "redirect_uri" : "http://localhost:8888/save_gist"},
+            data = {
+                "client_id": config.OAUTH_CLIENT_ID,
+                "client_secret" : config.OAUTH_CLIENT_SECRET,
+                "code" : access_code
+            },
             headers = {"Accept" : "application/json"})
 
-        print("Saving gist. . .")
         args = json.loads(response.text)
         print(args)
+        print("Building request. . .")
 
         # TODO: change these to .get to prevent exceptions
         access_token = args["access_token"]
@@ -33,24 +30,22 @@ class AuthorizeHandler(IPythonHandler):
 
         print(tokenDict)
         pyFiles = {
-            'description' : 'My python file',
-            'files' : {
-                "a.txt" : {
-                    "content" : "I am a python file"
-                    },
-                "b.txt" : {
-                    "content" : "I am also a python file"
-                    }
-                }
+            "description": "My example notebook",
+            "public": False,
+            "files": {
+                "a.txt" : {"content": "I am a python file"},
+                "b.txt" : {"content": "I am also a python file"}
+            }
         }
         print("Saving gist. . .")
+        print(json.dumps(pyFiles))
         # TODO: Validate the token
         response = requests.post("https://api.github.com/gists",
             data = pyFiles,
             headers = tokenDict)
 
         print(response.content)
-        print("Saving gist. . .")
+        print("All done. . .")
 
 
 def load_jupyter_server_extension(nb_server_app):
@@ -62,5 +57,5 @@ def load_jupyter_server_extension(nb_server_app):
     """
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
-    route_pattern = url_path_join(web_app.settings['base_url'], '/authorize')
-    web_app.add_handlers(host_pattern, [(route_pattern, AuthorizeHandler)])
+    route_pattern = url_path_join(web_app.settings['base_url'], '/create_gist')
+    web_app.add_handlers(host_pattern, [(route_pattern, GistHandler)])
