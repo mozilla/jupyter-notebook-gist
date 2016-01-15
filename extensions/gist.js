@@ -21,6 +21,11 @@ define( function () {
     var github_redirect_uri = "http://localhost:8888/authorize";
 
     var gist_notebook = function () {
+
+        // save the notebook and create a checkpoint
+        IPython.notebook.save_checkpoint();
+
+        // start OAuth dialog
         window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
           "&scope=gist&redirect_uri=" + github_redirect_uri);
     };
@@ -33,7 +38,7 @@ define( function () {
         if ($("#gist_notebook").length === 0) {
             IPython.toolbar.add_buttons_group([
                 {
-                    'label'   : 'Save Notebook as gist',
+                    'label'   : 'save notebook as gist',
                     'icon'    : 'fa-github',
                     'callback': gist_notebook,
                     'id'      : 'gist_notebook'
