@@ -14,4 +14,6 @@ c.NotebookApp.server_extensions = [
 ]
 ```
 
+Copy config.py.example to config.py and insert a working clientid / secret.
+
 Then run `jupyter notebook`
