@@ -46,7 +46,7 @@ class AuthorizeHandler(IPythonHandler):
         print("Saving gist. . .")
         # TODO: Validate the token
         response = requests.post("https://api.github.com/gists",
-            data = pyFiles,
+            data = json.dumps(pyFiles),
             headers = tokenDict)
 
         print(response.content)
