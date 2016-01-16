@@ -19,8 +19,8 @@ c.NotebookApp.server_extensions = [
 ]
 
 # Make the client id and secret available to the server.
-c.NotebookApp.oauth_client_id = "my_client_id"
-c.NotebookApp.oauth_client_secret = "my_client_secret"
+c.NotebookApp.oauth_client_id = "my_client_id"         # FIXME
+c.NotebookApp.oauth_client_secret = "my_client_secret" # FIXME
 
 # Load the js extension and set some config values
 cm = ConfigManager()
