@@ -45,7 +45,7 @@ class GistHandler(IPythonHandler):
         python_output, _ = export_by_name("python", nb_path)
 
         pyFiles = {
-            "description": "My example notebook",
+            "description": filename_no_ext,
             "public": False,
             "files": {
                 filename : {"content": notebook_output},
