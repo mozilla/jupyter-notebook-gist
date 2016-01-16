@@ -32,4 +32,6 @@ cm.update('notebook', {"oauth_client_id": c.NotebookApp.oauth_client_id})
 
 Replace the vars above with a working client_id / secret.
 
+Copy or symlink `extensions/gist.js` to your jupyter nbextensions directory.
+
 Then run `jupyter notebook` from the repo root.
