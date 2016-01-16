@@ -17,6 +17,8 @@ class GistHandler(IPythonHandler):
             },
             headers = {"Accept" : "application/json"})
 
+        nb_path = args["nb_path"][0].decode('utf-8')
+
         args = json.loads(response.text)
         print(args)
         print("Building request. . .")
