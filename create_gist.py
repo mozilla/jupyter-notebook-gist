@@ -3,6 +3,12 @@ from notebook.base.handlers import IPythonHandler
 import requests
 import json
 import config
+import os.path
+import base64
+
+from nbconvert.exporters.python import PythonExporter
+from nbconvert.exporters.notebook import NotebookExporter
+from nbconvert.exporters.export import *
 
 class GistHandler(IPythonHandler):
     def get(self):
@@ -17,6 +23,8 @@ class GistHandler(IPythonHandler):
             },
             headers = {"Accept" : "application/json"})
 
+        nb_path = base64.b64decode(args["nb_path"][0]).decode('utf-8').lstrip("/")
+
         args = json.loads(response.text)
         print(args)
         print("Building request. . .")
@@ -28,23 +36,30 @@ class GistHandler(IPythonHandler):
 
         tokenDict = { "Authorization" : "token " + access_token }
 
-        print(tokenDict)
+        print("Extracting file contents")
+        filename = os.path.basename(nb_path)
+        ext_start_ind = filename.rfind(".")
+        if ext_start_ind == -1:
+            filename_no_ext = filename
+        else:
+            filename_no_ext = filename[:ext_start_ind]
+        notebook_output, _ = export_by_name("notebook", nb_path)
+        python_output, _ = export_by_name("python", nb_path)
+
         pyFiles = {
             "description": "My example notebook",
             "public": False,
             "files": {
-                "a.txt" : {"content": "I am a python file"},
-                "b.txt" : {"content": "I am also a python file"}
+                filename : {"content": notebook_output},
+                filename_no_ext + ".py" : {"content": python_output}
             }
         }
+
         print("Saving gist. . .")
-        print(json.dumps(pyFiles))
         # TODO: Validate the token
         response = requests.post("https://api.github.com/gists",
             data = json.dumps(pyFiles),
             headers = tokenDict)
-
-        print(response.content)
 
         print("Redirecting...")
         self.redirect(response.json()["html_url"])
