@@ -21,22 +21,28 @@ define(function () {
     var github_redirect_uri = "http://localhost:8888/create_gist";
     var gist_notebook = function () {
         // save the notebook and create a checkpoint
-        IPython.notebook.save_checkpoint();
+        Jupyter.notebook.save_checkpoint();
 
-        var github_client_id = IPython.notebook.config.data.oauth_client_id;
+        var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
+        // get notebook path and encode it in base64
+
+        // Characters like # get decoded by the github API and will mess up
+        // getting the file path on the server if we use URI percent encoding,
+        // so we use base64 instead
+        var nb_path = window.btoa(Jupyter.notebook.base_url + Jupyter.notebook.notebook_path);
 
         // start OAuth dialog
         window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
-          "&scope=gist&redirect_uri=" + github_redirect_uri);
+          "&scope=gist&redirect_uri=" + github_redirect_uri + "?nb_path=" + nb_path);
     };
 
     var gist_button = function () {
-        if (!IPython.toolbar) {
-            $([IPython.events]).on("app_initialized.NotebookApp", gist_button);
+        if (!Jupyter.toolbar) {
+            $([Jupyter.events]).on("app_initialized.NotebookApp", gist_button);
             return;
         }
         if ($("#gist_notebook").length === 0) {
-            IPython.toolbar.add_buttons_group([
+            Jupyter.toolbar.add_buttons_group([
                 {
                     'label'   : 'save notebook as gist',
                     'icon'    : 'fa-github',
