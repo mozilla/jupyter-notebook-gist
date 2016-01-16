@@ -6,18 +6,18 @@ import requests
 import json
 
 # Get Server config
-server_cm = ConfigManager(config_dir=jupyter_config_dir())
-cfg = server_cm.get('jupyter_notebook_config')
 
 class GistHandler(IPythonHandler):
+    client_id = None
+    client_secret = None
     def get(self):
         print("Extracting code . . .")
         args = self.request.arguments
         access_code = args["code"][0].decode('ascii')
         response = requests.post("https://github.com/login/oauth/access_token",
             data = {
-                "client_id": cfg['NotebookApp']['oauth_client_id'],
-                "client_secret" : cfg['NotebookApp']['oauth_client_secret'],
+                "client_id": self.client_id,
+                "client_secret" : self.client_secret,
                 "code" : access_code
             },
             headers = {"Accept" : "application/json"})
@@ -60,6 +60,11 @@ def load_jupyter_server_extension(nb_server_app):
     Args:
         nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
+    # Extract our gist client details from the config:
+    cfg = nb_server_app.config["NotebookApp"]
+    GistHandler.client_id = cfg["oauth_client_id"]
+    GistHandler.client_secret = cfg["oauth_client_secret"]
+
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
     route_pattern = url_path_join(web_app.settings['base_url'], '/create_gist')
