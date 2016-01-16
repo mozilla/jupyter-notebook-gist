@@ -17,13 +17,13 @@ cm.update('notebook', {"load_extensions": {"gist": True}})
 */
 
 
-define(function (Jupyter) {
+define(function () {
     var github_redirect_uri = "http://localhost:8888/create_gist";
-    var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
-
     var gist_notebook = function () {
         // save the notebook and create a checkpoint
         IPython.notebook.save_checkpoint();
+
+        var github_client_id = IPython.notebook.config.data.oauth_client_id;
 
         // start OAuth dialog
         window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
