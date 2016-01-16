@@ -34,7 +34,7 @@ class GistHandler(IPythonHandler):
         token_type = args["token_type"]
         scope = args["scope"]
 
-        githubHeaders = { "Accept" : "application/json",
+        github_headers = { "Accept" : "application/json",
                             "Authorization" : "token " + access_token }
 
         print("Extracting file contents")
@@ -47,30 +47,30 @@ class GistHandler(IPythonHandler):
         notebook_output, _ = export_by_name("notebook", nb_path)
         python_output, _ = export_by_name("python", nb_path)
 
-        pyFiles = {
+        filename_with_py = filename_no_ext + ".py"
+        py_files = {
             "description": filename_no_ext,
             "public": False,
             "files": {
                 filename : {"filename" : filename, "content": notebook_output},
-                filename_no_ext + ".py" : { "filename" : filename_no_ext + ".py",
+                filename_with_py : { "filename" : filename_with_py,
                                 "content": python_output }
             }
         }
 
         # Get the list of user's gists to see if this gist exists already
         response = requests.get("https://api.github.com/gists",
-            headers = githubHeaders)
+            headers = github_headers)
         args = json.loads(response.text)
 
-        filenameWithPy = filename_no_ext + ".py"
-        matchCounter = 0;
+        match_counter = 0;
         matchID = None
 
         for gist in args:
 
-            gistContents = gist["files"]
-            if filename in gistContents and filenameWithPy in gistContents:
-                matchCounter += 1
+            gist_contents = gist["files"]
+            if filename in gist_contents and filename_with_py in gist_contents:
+                match_counter += 1
             
                 if "id" in gist:
                     matchID = gist["id"]
@@ -80,17 +80,17 @@ class GistHandler(IPythonHandler):
             print("Saving gist. . .")
             # TODO: Validate the token
             response = requests.post("https://api.github.com/gists",
-                data = json.dumps(pyFiles),
-                headers = githubHeaders)
+                data = json.dumps(py_files),
+                headers = github_headers)
 
         # If we have another gist with the same files, create a new revision
-        elif matchCounter == 1: 
+        elif match_counter == 1: 
             # create new rev for existing gist
             print ("Revising gist with id " + matchID)
 
             response = requests.patch("https://api.github.com/gists/" + matchID,
-                data = json.dumps(pyFiles),
-                headers = githubHeaders)
+                data = json.dumps(py_files),
+                headers = github_headers)
 
         # TODO: Some sort of error message if we have more than 1 gist with the same files
         else:
