@@ -4,6 +4,7 @@ import requests
 import json
 import config
 import os.path
+import base64
 
 from nbconvert.exporters.python import PythonExporter
 from nbconvert.exporters.notebook import NotebookExporter
@@ -22,7 +23,7 @@ class GistHandler(IPythonHandler):
             },
             headers = {"Accept" : "application/json"})
 
-        nb_path = args["nb_path"][0].decode('utf-8').lstrip("/")
+        nb_path = base64.b64decode(args["nb_path"][0]).decode('utf-8').lstrip("/")
 
         args = json.loads(response.text)
         print(args)
