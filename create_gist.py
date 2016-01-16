@@ -45,6 +45,10 @@ class GistHandler(IPythonHandler):
             headers = tokenDict)
 
         print(response.content)
+
+        print("Redirecting...")
+        self.redirect(response.json()["html_url"])
+
         print("All done. . .")
 
 
