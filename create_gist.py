@@ -41,7 +41,7 @@ class GistHandler(IPythonHandler):
         print(json.dumps(pyFiles))
         # TODO: Validate the token
         response = requests.post("https://api.github.com/gists",
-            data = pyFiles,
+            data = json.dumps(pyFiles),
             headers = tokenDict)
 
         print(response.content)
