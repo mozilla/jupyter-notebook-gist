@@ -7,7 +7,10 @@ import os.path
 import requests
 
 def handle_error(msg):
-    print("Error: ", msg)
+    print("ERROR: ", msg)
+
+def handle_github_error(msg):
+    print("ERROR: Github returned the following: ", msg)
 
 class GistHandler(IPythonHandler):
     client_id = None
@@ -15,20 +18,26 @@ class GistHandler(IPythonHandler):
 
     def get(self):
 
-        # Extract access code and notebook path
+        # Extract access code
+        access_code_args = self.request.arguments
 
-        handle_args = self.request.arguments
-
-        access_code = handle_args.get("Code", None)
-        if access_code is None or len(access_code) <= 0:
-            handle_error("Couldn't extract github authentication code from response")
+        access_code_error = access_code_args.get("error_description", None)
+        if access_code_error is not None:
+            if (len(access_code_error) >= 0):
+                handle_github_error(access_code_error)
             return
-        path_bytes = handle_args.get("nb_path", None)
+
+        access_code = access_code_args.get("code", None)
+        if access_code is None or len(access_code) <= 0:
+            handle_error("Couldn't extract github authentication code from response"),
+            return
+        path_bytes = access_code_args.get("nb_path", None)
         if path_bytes is None or len(path_bytes) <= 0:
             handle_error("Couldn't extract notebook path from response")
             return
 
-        nb_path = base64.b64decode(path).decode('utf-8').lstrip("/")
+        # Extract notebook path
+        nb_path = base64.b64decode(path_bytes[0]).decode('utf-8').lstrip("/")
         access_code = access_code[0].decode('ascii')
 
         # Request access token from github
@@ -42,14 +51,17 @@ class GistHandler(IPythonHandler):
 
         token_args = json.loads(response.text)
 
+        token_error = token_args.get("error_description", None)
+        if token_error is not None:
+            handle_github_error(token_error)
+            return
+
         # Extract token and scope info from github response
         access_token = token_args.get("access_token", None)
         token_type = token_args.get("token_type", None)
         scope = token_args.get("scope", None)
-        if (access_token is None or len(access_token) <= 0
-                or token_type is None or len(token_type) <= 0
-                or scope is None or len(scope) <= 0):
-            handle_error("Couldn't extract needed info from github access token response")
+        if access_token is None or token_type is None or scope is None:
+            handle_error(token_args, "Couldn't extract needed info from github access token response")
             return
 
         tokenDict = { "Authorization" : "token " + access_token }
@@ -77,11 +89,12 @@ class GistHandler(IPythonHandler):
             data = json.dumps(gist_contents),
             headers = tokenDict)
 
-        # TODO: Check if creating the gist was actually successful
-        # TODO: Check for known error responses from each REST call
-
         # Redirect the client to the github page for the new gist
         new_gist_response_json = new_gist_response.json()
+        gist_error = new_gist_response_json.get("error_description", None)
+        if gist_error is not None:
+            handle_github_error(gist_error)
+            return
         redirect_url = new_gist_response_json.get("html_url")
         if redirect_url is None:
             handle_error("Didn't receive a url for the new gist")
