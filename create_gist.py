@@ -3,6 +3,7 @@ from notebook.base.handlers import IPythonHandler
 import requests
 import json
 import config
+import base64
 
 class GistHandler(IPythonHandler):
     def get(self):
