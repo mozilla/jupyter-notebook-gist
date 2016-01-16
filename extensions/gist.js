@@ -30,6 +30,15 @@ function get_base_path() {
     return base;
 }
 
+function url_path_split(path) {
+    var idx = path.lastIndexOf('/');
+    if (idx === -1) {
+        return ['', path];
+    } else {
+        return [ path.slice(0, idx), path.slice(idx + 1) ];
+    }
+}
+
 define(function () {
     var github_redirect_uri = get_base_path() + "/create_gist";
     var gist_notebook = function () {
@@ -49,6 +58,54 @@ define(function () {
           "&scope=gist&redirect_uri=" + github_redirect_uri + "?nb_path=" + nb_path);
     };
 
+    var load_from_url = function() {
+        var gist_url = prompt("Enter a Gist URL");
+        // TODO: check that it's a valid URL
+
+        var gist_url_parts = gist_url.split('/');
+        var gist_id = gist_url_parts[gist_url_parts.length-1];
+
+        var url = "https://api.github.com/gists/" + gist_id;
+
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var res = JSON.parse(xhr.responseText);
+
+                for (var filename in res.files) {
+                    if (!res.files.hasOwnProperty(filename)) continue;
+
+                    if (filename.endsWith('.ipynb')) {
+                        var post_xhr = new XMLHttpRequest();
+
+                        var nb_info = {
+                            nb_url: res.files[filename].raw_url,
+                            nb_name: filename
+                        }
+                        post_xhr.open("POST",  "/download_gist", true);
+                        post_xhr.setRequestHeader('Content-Type', 'application/json');
+                        post_xhr.onload = function () {
+                            console.log(this.responseText);
+                            window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + this.responseText);
+                        };
+                        post_xhr.send(JSON.stringify(nb_info));
+
+
+
+                    }
+                }
+
+                console.log(res);
+            } else if (xhr.readyState == 4 && xhr.status == 404) {
+                alert("Gist not found")
+            } else if (xhr.readyState == 4) {
+                alert("Couldn't load Gist.")
+            }
+        }
+        xhr.open("GET", url, true);
+        xhr.send(null);
+    }
+
     var gist_button = function () {
         if (!Jupyter.toolbar) {
             $([Jupyter.events]).on("app_initialized.NotebookApp", gist_button);
@@ -61,7 +118,12 @@ define(function () {
                     'icon'    : 'fa-github',
                     'callback': gist_notebook,
                     'id'      : 'gist_notebook'
-                },
+                }, {
+                    'label'   : 'load notebook from gist URL',
+                    'icon'    : 'fa-link',
+                    'callback': load_from_url,
+                    'id'      : 'load_gist_from_url'
+                }
             ]);
         }
     };

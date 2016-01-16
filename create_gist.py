@@ -5,6 +5,10 @@ import base64
 import json
 import os.path
 import requests
+import urllib.request
+import shutil
+import tornado
+import os
 
 # This handler will save out the notebook to GitHub gists in either a new Gist 
 # or it will create a new revision for a gist that already contains these two files.
@@ -103,6 +107,22 @@ class GistHandler(IPythonHandler):
         print("All done. . .")
 
 
+class DownloadGistHandler(IPythonHandler):
+    def post(self):
+        post_data = tornado.escape.json_decode(self.request.body) 
+
+        nb_url = post_data["nb_url"]
+        nb_name = post_data["nb_name"]
+
+        file_path = os.path.join(os.getcwd(), nb_name)
+
+        with urllib.request.urlopen(nb_url) as response, open(file_path, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
+
+        self.write(nb_name)
+        self.flush()
+
+
 def load_jupyter_server_extension(nb_server_app):
     """
     Called when the extension is loaded.
@@ -118,4 +138,9 @@ def load_jupyter_server_extension(nb_server_app):
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
     route_pattern = url_path_join(web_app.settings['base_url'], '/create_gist')
-    web_app.add_handlers(host_pattern, [(route_pattern, GistHandler)])
+    download_gist_route_pattern = url_path_join(web_app.settings['base_url'], '/download_gist')
+
+
+    web_app.add_handlers(host_pattern, [(route_pattern, GistHandler), (download_gist_route_pattern, DownloadGistHandler)])
+
+
