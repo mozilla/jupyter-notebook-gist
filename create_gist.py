@@ -34,7 +34,8 @@ class GistHandler(IPythonHandler):
         token_type = args["token_type"]
         scope = args["scope"]
 
-        tokenDict = { "Authorization" : "token " + access_token }
+        githubHeaders = { "Accept" : "application/json",
+                            "Authorization" : "token " + access_token }
 
         print("Extracting file contents")
         filename = os.path.basename(nb_path)
@@ -58,8 +59,7 @@ class GistHandler(IPythonHandler):
 
         # Get the list of user's gists to see if this gist exists already
         response = requests.get("https://api.github.com/gists",
-            headers = {"Accept" : "application/json",
-                       "Authorization" : "token " + access_token})
+            headers = githubHeaders)
         args = json.loads(response.text)
 
         filenameWithPy = filename_no_ext + ".py"
@@ -81,7 +81,7 @@ class GistHandler(IPythonHandler):
             # TODO: Validate the token
             response = requests.post("https://api.github.com/gists",
                 data = json.dumps(pyFiles),
-                headers = tokenDict)
+                headers = githubHeaders)
 
         # If we have another gist with the same files, create a new revision
         elif matchCounter == 1: 
@@ -90,7 +90,7 @@ class GistHandler(IPythonHandler):
 
             response = requests.patch("https://api.github.com/gists/" + matchID,
                 data = json.dumps(pyFiles),
-                headers = tokenDict)
+                headers = githubHeaders)
 
         # TODO: Some sort of error message if we have more than 1 gist with the same files
         else:
