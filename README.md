@@ -30,7 +30,8 @@ cm.update('notebook', {"load_extensions": {"gist": True}})
 cm.update('notebook', {"oauth_client_id": c.NotebookApp.oauth_client_id})
 ```
 
-Replace the vars above with a working client_id / secret.
+Replace the vars above with a working client_id / secret. You can create one
+[here](https://github.com/settings/applications).
 
 Copy or symlink `extensions/gist.js` to your jupyter nbextensions directory.
 Running `jupyter --data-dir` should show the target location.
