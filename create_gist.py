@@ -1,8 +1,13 @@
+from jupyter_core.paths import jupyter_config_dir
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
+from notebook.services.config import ConfigManager
 import requests
 import json
-import config
+
+# Get Server config
+server_cm = ConfigManager(config_dir=jupyter_config_dir())
+cfg = server_cm.get('jupyter_notebook_config')
 
 class GistHandler(IPythonHandler):
     def get(self):
@@ -11,8 +16,8 @@ class GistHandler(IPythonHandler):
         access_code = args["code"][0].decode('ascii')
         response = requests.post("https://github.com/login/oauth/access_token",
             data = {
-                "client_id": config.OAUTH_CLIENT_ID,
-                "client_secret" : config.OAUTH_CLIENT_SECRET,
+                "client_id": cfg['NotebookApp']['oauth_client_id'],
+                "client_secret" : cfg['NotebookApp']['oauth_client_secret'],
                 "code" : access_code
             },
             headers = {"Accept" : "application/json"})

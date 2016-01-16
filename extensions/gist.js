@@ -15,13 +15,13 @@ cm = ConfigManager()
 cm.update('notebook', {"load_extensions": {"gist": True}})
 
 */
-define( function () {
 
-    var github_client_id = "a179eb5f91edcc084d8b";
+
+define(function (Jupyter) {
     var github_redirect_uri = "http://localhost:8888/create_gist";
+    var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
 
     var gist_notebook = function () {
-
         // save the notebook and create a checkpoint
         IPython.notebook.save_checkpoint();
 
@@ -54,4 +54,6 @@ define( function () {
     return {
         load_ipython_extension: load_ipython_extension
     };
-});
+}
+
+);
