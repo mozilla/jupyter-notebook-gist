@@ -16,9 +16,22 @@ cm.update('notebook', {"load_extensions": {"gist": True}})
 
 */
 
+function get_base_path() {
+    var loc = window.location;
+    var proto = loc.protocol;
+    var host = loc.hostname;
+    var port = loc.port;
+
+    var base = proto + "//" + host;
+    if (parseInt(port) != 80) {
+        base += ":" + port;
+    }
+    console.log("Base path: " + base);
+    return base;
+}
 
 define(function () {
-    var github_redirect_uri = "http://localhost:8888/create_gist";
+    var github_redirect_uri = get_base_path() + "/create_gist";
     var gist_notebook = function () {
         // save the notebook and create a checkpoint
         Jupyter.notebook.save_checkpoint();

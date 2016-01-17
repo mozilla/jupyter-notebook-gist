@@ -12,6 +12,8 @@ def handle_error(msg):
 def handle_github_error(msg):
     print("ERROR: Github returned the following: ", msg)
 
+# This handler will save out the notebook to GitHub gists in either a new Gist 
+# or it will create a new revision for a gist that already contains these two files.
 class GistHandler(IPythonHandler):
     client_id = None
     client_secret = None
@@ -41,7 +43,7 @@ class GistHandler(IPythonHandler):
         access_code = access_code[0].decode('ascii')
 
         # Request access token from github
-        response = requests.post("https://github.com/login/oauth/access_token",
+        token_response = requests.post("https://github.com/login/oauth/access_token",
             data = {
                 "client_id": self.client_id,
                 "client_secret" : self.client_secret,
@@ -49,7 +51,7 @@ class GistHandler(IPythonHandler):
             },
             headers = {"Accept" : "application/json"})
 
-        token_args = json.loads(response.text)
+        token_args = json.loads(token_response.text)
 
         token_error = token_args.get("error_description", None)
         if token_error is not None:
@@ -64,7 +66,8 @@ class GistHandler(IPythonHandler):
             handle_error(token_args, "Couldn't extract needed info from github access token response")
             return
 
-        tokenDict = { "Authorization" : "token " + access_token }
+        github_headers = { "Accept" : "application/json",
+                            "Authorization" : "token " + access_token }
 
         # Extract file contents given the path to the notebook
         filename = os.path.basename(nb_path)
@@ -77,29 +80,62 @@ class GistHandler(IPythonHandler):
         python_output, _ = export_by_name("python", nb_path)
 
         # Prepare and send our github request to create the new gist
+        filename_with_py = filename_no_ext + ".py"
         gist_contents = {
             "description": filename_no_ext,
             "public": False,
             "files": {
-                filename : {"content": notebook_output},
-                filename_no_ext + ".py" : {"content": python_output}
+                filename : {"filename" : filename, "content": notebook_output},
+                filename_with_py : { "filename" : filename_with_py,
+                                "content": python_output }
             }
         }
-        new_gist_response = requests.post("https://api.github.com/gists",
-            data = json.dumps(gist_contents),
-            headers = tokenDict)
 
-        # Redirect the client to the github page for the new gist
-        new_gist_response_json = new_gist_response.json()
-        gist_error = new_gist_response_json.get("error_description", None)
-        if gist_error is not None:
-            handle_github_error(gist_error)
+        # Get the list of user's gists to see if this gist exists already
+        response = requests.get("https://api.github.com/gists",
+            headers = github_headers)
+        get_gists_args = json.loads(response.text)
+
+        match_counter = 0;
+        matchID = None
+        for gist in get_gists_args:
+            gist_files = gist.get("files", None)
+            if (gist_files is not None and filename in gist_files
+                    and filename_with_py in gist_files):
+                match_counter += 1
+                if "id" in gist:
+                    matchID = gist["id"]
+
+        # If no gist with this name exists yet, create a new gist
+        if matchID == None:
+            gist_response = requests.post("https://api.github.com/gists",
+                data = json.dumps(gist_contents),
+                headers = github_headers)
+
+        # If we have another gist with the same files, create a new revision
+        elif match_counter == 1: 
+            gist_response = requests.patch("https://api.github.com/gists/" + matchID,
+                data = json.dumps(gist_contents),
+                headers = github_headers)
+
+        # TODO: This probably should actually be an error
+        # Instead, we should ask the user which gist they meant?
+        else:
+            handle_error("You had multiple gists with the same name as this notebook. Aborting.")
             return
-        redirect_url = new_gist_response_json.get("html_url")
-        if redirect_url is None:
-            handle_error("Didn't receive a url for the new gist")
+
+        gist_response_json = gist_response.json()
+        update_gist_error = gist_response_json.get("error_description", None)
+        if update_gist_error is not None:
+            handle_github_error(update_gist_error)
             return
-        self.redirect(redirect_url)
+            
+        gist_url = gist_response_json.get("html_url", None)
+        if gist_url is None:
+            handle_error("Couldn't get the url for the gist that was just updated")
+            return
+
+        self.redirect(gist_url)
 
 
 def load_jupyter_server_extension(nb_server_app):
