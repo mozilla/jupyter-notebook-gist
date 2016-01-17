@@ -13,38 +13,48 @@ def raise_error(msg):
 def raise_github_error(msg):
     raise tornado.web.HTTPError(500, "ERROR: Github returned the following: " + msg)
 
-# This handler will save out the notebook to GitHub gists in either a new Gist 
-# or it will create a new revision for a gist that already contains these two files.
-class GistHandler(IPythonHandler):
+# Extracts the access code from the arguments dictionary (given back from github)
+def extract_code_from_args(args):
+    error = args.get("error_description", None)
+    if error is not None:
+        if (len(error) >= 0):
+            raise_github_error(error)
+
+    access_code = args.get("code", None)
+    if access_code is None or len(access_code) <= 0:
+        raise_error("Couldn't extract github authentication code from response"),
+
+    # If we get here, everything was good - no errors
+    access_code = access_code[0].decode('ascii')
+    return access_code
+
+# Extracts the notebook path from the arguments dictionary (given back from github)
+def extract_notebook_path_from_args(args):
+    error = args.get("error_description", None)
+    if error is not None:
+        if (len(error) >= 0):
+            raise_github_error(error)
+
+    path_bytes = args.get("nb_path", None)
+    if path_bytes is None or len(path_bytes) <= 0:
+        raise_error("Couldn't extract notebook path from response")
+
+    # If we get here, everything was good - no errors
+    nb_path = base64.b64decode(path_bytes[0]).decode('utf-8').lstrip("/")
+    return nb_path
+
+
+class BaseHandler(IPythonHandler):
     client_id = None
     client_secret = None
 
-    def get(self):
+    def request_access_token(access_code):
 
-        # Extract access code
-        access_code_args = self.request.arguments
-
-        access_code_error = access_code_args.get("error_description", None)
-        if access_code_error is not None:
-            if (len(access_code_error) >= 0):
-                raise_github_error(access_code_error)
-
-        access_code = access_code_args.get("code", None)
-        if access_code is None or len(access_code) <= 0:
-            raise_error("Couldn't extract github authentication code from response"),
-        path_bytes = access_code_args.get("nb_path", None)
-        if path_bytes is None or len(path_bytes) <= 0:
-            raise_error("Couldn't extract notebook path from response")
-
-        # Extract notebook path
-        nb_path = base64.b64decode(path_bytes[0]).decode('utf-8').lstrip("/")
-        access_code = access_code[0].decode('ascii')
-
-        # Request access token from github
+         # Request access token from github
         token_response = requests.post("https://github.com/login/oauth/access_token",
             data = {
-                "client_id": self.client_id,
-                "client_secret" : self.client_secret,
+                "client_id": BaseHandler.client_id,
+                "client_secret" : BaseHandler.client_secret,
                 "code" : access_code
             },
             headers = {"Accept" : "application/json"})
@@ -55,25 +65,60 @@ class GistHandler(IPythonHandler):
         if token_error is not None:
             raise_github_error(token_error)
 
-        # Extract token and scope info from github response
+        # Extract token and other info from github response
         access_token = token_args.get("access_token", None)
         token_type = token_args.get("token_type", None)
         scope = token_args.get("scope", None)
         if access_token is None or token_type is None or scope is None:
             raise_error(token_args, "Couldn't extract needed info from github access token response")
 
-        github_headers = { "Accept" : "application/json",
-                            "Authorization" : "token " + access_token }
+        # If we get here everything is good
+        return access_token #do not care about scope or token_type
 
-        # Extract file contents given the path to the notebook
+    def get_notebook_filename(nb_path):
+
+        # Extract file names given path to notebook
         filename = os.path.basename(nb_path)
         ext_start_ind = filename.rfind(".")
         if ext_start_ind == -1:
             filename_no_ext = filename
         else:
             filename_no_ext = filename[:ext_start_ind]
+
+        return filename, filename_no_ext
+
+    def get_notebook_contents(nb_path):
+
+        # Extract file contents given the path to the notebook
         notebook_output, _ = export_by_name("notebook", nb_path)
         python_output, _ = export_by_name("python", nb_path)
+
+        return (notebook_output, python_output)
+
+
+# This handler will save out the notebook to GitHub gists in either a new Gist 
+# or it will create a new revision for a gist that already contains these two files.
+class GistHandler(BaseHandler):
+
+    def get(self):
+
+        # Extract access code
+        access_code = extract_code_from_args(self.request.arguments)
+
+        # Request access token from github
+        access_token = BaseHandler.request_access_token(access_code)
+
+        github_headers = { "Accept" : "application/json",
+                            "Authorization" : "token " + access_token }
+
+        # Extract notebook path
+        nb_path = extract_notebook_path_from_args(self.request.arguments)
+
+        # Extract file name
+        filename, filename_no_ext = BaseHandler.get_notebook_filename(nb_path)
+
+        # Extract file contents given the path to the notebook
+        notebook_output, python_output = BaseHandler.get_notebook_contents(nb_path)
 
         # Prepare and send our github request to create the new gist
         filename_with_py = filename_no_ext + ".py"
@@ -135,8 +180,8 @@ def load_jupyter_server_extension(nb_server_app):
 
     # Extract our gist client details from the config:
     cfg = nb_server_app.config["NotebookApp"]
-    GistHandler.client_id = cfg["oauth_client_id"]
-    GistHandler.client_secret = cfg["oauth_client_secret"]
+    BaseHandler.client_id = cfg["oauth_client_id"]
+    BaseHandler.client_secret = cfg["oauth_client_secret"]
 
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
