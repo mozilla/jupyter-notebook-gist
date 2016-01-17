@@ -138,8 +138,13 @@ class DownloadNotebookHandler(IPythonHandler):
 
         nb_url = post_data["nb_url"]
         nb_name = base64.b64decode(post_data["nb_name"]).decode('utf-8')
+        force_download = post_data["force_download"]
 
         file_path = os.path.join(os.getcwd(), nb_name)
+
+        if os.path.isfile(file_path):
+            if not force_download:
+                raise tornado.web.HTTPError(409, "ERROR: File already exists.")
 
         r = requests.get(nb_url, stream=True)
         with open(file_path, 'wb') as fd:

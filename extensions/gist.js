@@ -47,7 +47,6 @@ define(function () {
 
         var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
         // get notebook path and encode it in base64
-
         // Characters like # get decoded by the github API and will mess up
         // getting the file path on the server if we use URI percent encoding,
         // so we use base64 instead
@@ -61,13 +60,10 @@ define(function () {
     var load_from_url = function() {
         var url = prompt("Enter a Gist URL");
         // TODO: check that it's a valid URL
-
         var parser = document.createElement('a');
         parser.href = url;
         if (parser.hostname.indexOf('gist.github.com') > -1) {
             // this is a gist URL, extract the raw_url for the .ipynb file
-
-
             var gist_url_parts = url.split('/');
             var gist_id = gist_url_parts[gist_url_parts.length-1];
 
@@ -75,47 +71,52 @@ define(function () {
 
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    var res = JSON.parse(xhr.responseText);
-
-                    for (var filename in res.files) {
-                        if (!res.files.hasOwnProperty(filename)) continue;
-
-                        if (filename.endsWith('.ipynb')) {
-                            download_nb_on_server(res.files[filename].raw_url, filename);
+                if (xhr.readyState == XMLHttpRequest.DONE) {
+                    if (xhr.status == 200) {
+                        var res = JSON.parse(xhr.responseText);
+                        for (var filename in res.files) {
+                            if (!res.files.hasOwnProperty(filename)) continue;
+                            if (filename.endsWith('.ipynb')) {
+                                download_nb_on_server(res.files[filename].raw_url, filename, false);
+                            }
                         }
+                        console.log(res);
+                    } else if (xhr.status == 404) {
+                        alert("Gist not found")
+                    } else {
+                        alert("Couldn't load Gist.")
                     }
-
-                    console.log(res);
-                } else if (xhr.readyState == 4 && xhr.status == 404) {
-                    alert("Gist not found")
-                } else if (xhr.readyState == 4) {
-                    alert("Couldn't load Gist.")
                 }
             }
             xhr.open("GET", gist_api_url, true);
             xhr.send(null);
         } else if (url.indexOf('.ipynb', url.length - '.ipynb'.length) !== -1) {
             // URL is a raw .ipynb file
-
             var nb_pathname_parts = parser.pathname.split('/');
             var filename = decodeURIComponent(nb_pathname_parts[nb_pathname_parts.length - 1]);
-            download_nb_on_server(url, filename);
+            download_nb_on_server(url, filename, false);
         }
     }
 
-    var download_nb_on_server = function(url, name) {
+    var download_nb_on_server = function(url, name, force_download) {
         var xhr = new XMLHttpRequest();
-
         var nb_info = {
             nb_url: url,
-            nb_name: window.btoa(name)
+            nb_name: window.btoa(name),
+            force_download: force_download
         }
         xhr.open("POST",  "/download_notebook", true);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.onload = function () {
-            console.log(this.responseText);
-            window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + encodeURIComponent(this.responseText));
+            if (xhr.status == 409) {
+                // 409 Conflict
+                // used if file already exists
+                var newname = prompt("File already exists. Please enter a new name.\nNote: This may overwrite existing files.", 
+                                     name);
+                download_nb_on_server(url, newname, true);
+            } else if (xhr.status == 200) {
+                window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + encodeURIComponent(this.responseText));
+            }
         };
         xhr.send(JSON.stringify(nb_info));
     }
@@ -144,6 +145,7 @@ define(function () {
 
     var load_ipython_extension = function () {
         gist_button();
+        console.log("loaded gist.js");
     };
 
     return {
