@@ -7,10 +7,10 @@ import os.path
 import requests
 import tornado
 
-def handle_error(msg):
+def raise_error(msg):
     raise tornado.web.HTTPError(500, "ERROR: " + msg)
 
-def handle_github_error(msg):
+def raise_github_error(msg):
     raise tornado.web.HTTPError(500, "ERROR: Github returned the following: " + msg)
 
 # This handler will save out the notebook to GitHub gists in either a new Gist 
@@ -27,17 +27,14 @@ class GistHandler(IPythonHandler):
         access_code_error = access_code_args.get("error_description", None)
         if access_code_error is not None:
             if (len(access_code_error) >= 0):
-                handle_github_error(access_code_error)
-            return
+                raise_github_error(access_code_error)
 
         access_code = access_code_args.get("code", None)
         if access_code is None or len(access_code) <= 0:
-            handle_error("Couldn't extract github authentication code from response"),
-            return
+            raise_error("Couldn't extract github authentication code from response"),
         path_bytes = access_code_args.get("nb_path", None)
         if path_bytes is None or len(path_bytes) <= 0:
-            handle_error("Couldn't extract notebook path from response")
-            return
+            raise_error("Couldn't extract notebook path from response")
 
         # Extract notebook path
         nb_path = base64.b64decode(path_bytes[0]).decode('utf-8').lstrip("/")
@@ -56,16 +53,14 @@ class GistHandler(IPythonHandler):
 
         token_error = token_args.get("error_description", None)
         if token_error is not None:
-            handle_github_error(token_error)
-            return
+            raise_github_error(token_error)
 
         # Extract token and scope info from github response
         access_token = token_args.get("access_token", None)
         token_type = token_args.get("token_type", None)
         scope = token_args.get("scope", None)
         if access_token is None or token_type is None or scope is None:
-            handle_error(token_args, "Couldn't extract needed info from github access token response")
-            return
+            raise_error(token_args, "Couldn't extract needed info from github access token response")
 
         github_headers = { "Accept" : "application/json",
                             "Authorization" : "token " + access_token }
@@ -122,19 +117,16 @@ class GistHandler(IPythonHandler):
         # TODO: This probably should actually be an error
         # Instead, we should ask the user which gist they meant?
         else:
-            handle_error("You had multiple gists with the same name as this notebook. Aborting.")
-            return
+            raise_error("You had multiple gists with the same name as this notebook. Aborting.")
 
         gist_response_json = gist_response.json()
         update_gist_error = gist_response_json.get("error_description", None)
         if update_gist_error is not None:
-            handle_github_error(update_gist_error)
-            return
+            raise_github_error(update_gist_error)
             
         gist_url = gist_response_json.get("html_url", None)
         if gist_url is None:
-            handle_error("Couldn't get the url for the gist that was just updated")
-            return
+            raise_error("Couldn't get the url for the gist that was just updated")
 
         self.redirect(gist_url)
 
