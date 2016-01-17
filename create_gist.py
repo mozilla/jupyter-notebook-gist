@@ -3,10 +3,7 @@ from notebook.base.handlers import IPythonHandler
 from nbconvert.exporters.export import *
 import base64
 import json
-import os.path
 import requests
-import urllib.request
-import shutil
 import tornado
 import os
 
@@ -144,8 +141,10 @@ class DownloadNotebookHandler(IPythonHandler):
 
         file_path = os.path.join(os.getcwd(), nb_name)
 
-        with urllib.request.urlopen(nb_url) as response, open(file_path, 'wb') as out_file:
-            shutil.copyfileobj(response, out_file)
+        r = requests.get(nb_url, stream=True)
+        with open(file_path, 'wb') as fd:
+            for chunk in r.iter_content(1024): # TODO: check if this is a good chunk size
+                fd.write(chunk)
 
         self.write(nb_name)
         self.flush()
