@@ -6,6 +6,10 @@ import json
 import os.path
 import requests
 import tornado
+import logging
+
+# Example usage: tornado_logger.error("This is an error!")
+tornado_logger = logging.getLogger("tornado.application")
 
 def raise_error(msg):
     raise tornado.web.HTTPError(500, "ERROR: " + msg)
@@ -114,7 +118,7 @@ class GistHandler(IPythonHandler):
                 data = json.dumps(gist_contents),
                 headers = github_headers)
 
-        # TODO: This probably should actually be an error
+        # TODO: This probably shouldn't actually be an error
         # Instead, we should ask the user which gist they meant?
         else:
             raise_error("You had multiple gists with the same name as this notebook. Aborting.")
