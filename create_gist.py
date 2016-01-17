@@ -107,12 +107,12 @@ class GistHandler(IPythonHandler):
         print("All done. . .")
 
 
-class DownloadGistHandler(IPythonHandler):
+class DownloadNotebookHandler(IPythonHandler):
     def post(self):
         post_data = tornado.escape.json_decode(self.request.body) 
 
         nb_url = post_data["nb_url"]
-        nb_name = post_data["nb_name"]
+        nb_name = base64.b64decode(post_data["nb_name"]).decode('utf-8')
 
         file_path = os.path.join(os.getcwd(), nb_name)
 
@@ -138,9 +138,9 @@ def load_jupyter_server_extension(nb_server_app):
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
     route_pattern = url_path_join(web_app.settings['base_url'], '/create_gist')
-    download_gist_route_pattern = url_path_join(web_app.settings['base_url'], '/download_gist')
+    download_notebook_route_pattern = url_path_join(web_app.settings['base_url'], '/download_notebook')
 
 
-    web_app.add_handlers(host_pattern, [(route_pattern, GistHandler), (download_gist_route_pattern, DownloadGistHandler)])
+    web_app.add_handlers(host_pattern, [(route_pattern, GistHandler), (download_notebook_route_pattern, DownloadNotebookHandler)])
 
 
