@@ -1,5 +1,5 @@
 /*
-Add this file to $(jupyter data-dir)/nbextensions/gist.js
+Add this file to $(jupyter --data-dir)/nbextensions/gist.js
 And load it with:
 
 require(["nbextensions/gist"], function (gist_extension) {
@@ -13,7 +13,6 @@ load for every notebook
 from notebook.services.config import ConfigManager
 cm = ConfigManager()
 cm.update('notebook', {"load_extensions": {"gist": True}})
-
 */
 
 function get_base_path() {
@@ -26,7 +25,6 @@ function get_base_path() {
     if (parseInt(port) != 80) {
         base += ":" + port;
     }
-    console.log("Base path: " + base);
     return base;
 }
 
@@ -42,17 +40,18 @@ function url_path_split(path) {
 define(function () {
     var github_redirect_uri = get_base_path() + "/create_gist";
     var gist_notebook = function () {
-        // save the notebook and create a checkpoint
+        // Save the notebook and create a checkpoint to ensure that we create
+        // the gist using the most up-to-date content
         Jupyter.notebook.save_checkpoint();
 
         var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
-        // get notebook path and encode it in base64
+        // Get notebook path and encode it in base64
         // Characters like # get decoded by the github API and will mess up
         // getting the file path on the server if we use URI percent encoding,
         // so we use base64 instead
         var nb_path = window.btoa(Jupyter.notebook.base_url + Jupyter.notebook.notebook_path);
 
-        // start OAuth dialog
+        // Start OAuth dialog
         window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
           "&scope=gist&redirect_uri=" + github_redirect_uri + "?nb_path=" + nb_path);
     };
@@ -151,6 +150,4 @@ define(function () {
     return {
         load_ipython_extension: load_ipython_extension
     };
-}
-
-);
+});
