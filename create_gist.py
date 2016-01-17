@@ -17,40 +17,41 @@ def raise_error(msg):
 def raise_github_error(msg):
     raise tornado.web.HTTPError(500, "ERROR: Github returned the following: " + msg)
 
-# Extracts the access code from the arguments dictionary (given back from github)
-def extract_code_from_args(args):
-    error = args.get("error_description", None)
-    if error is not None:
-        if (len(error) >= 0):
-            raise_github_error(error)
-
-    access_code = args.get("code", None)
-    if access_code is None or len(access_code) <= 0:
-        raise_error("Couldn't extract github authentication code from response"),
-
-    # If we get here, everything was good - no errors
-    access_code = access_code[0].decode('ascii')
-    return access_code
-
-# Extracts the notebook path from the arguments dictionary (given back from github)
-def extract_notebook_path_from_args(args):
-    error = args.get("error_description", None)
-    if error is not None:
-        if (len(error) >= 0):
-            raise_github_error(error)
-
-    path_bytes = args.get("nb_path", None)
-    if path_bytes is None or len(path_bytes) <= 0:
-        raise_error("Couldn't extract notebook path from response")
-
-    # If we get here, everything was good - no errors
-    nb_path = base64.b64decode(path_bytes[0]).decode('utf-8').lstrip("/")
-    return nb_path
-
 
 class BaseHandler(IPythonHandler):
     client_id = None
     client_secret = None
+
+    # Extracts the access code from the arguments dictionary (given back from github)
+    def extract_code_from_args(self, args):
+        error = args.get("error_description", None)
+        if error is not None:
+            if (len(error) >= 0):
+                raise_github_error(error)
+
+        access_code = args.get("code", None)
+        if access_code is None or len(access_code) <= 0:
+            raise_error("Couldn't extract github authentication code from response"),
+
+        # If we get here, everything was good - no errors
+        access_code = access_code[0].decode('ascii')
+        return access_code
+
+    # Extracts the notebook path from the arguments dictionary (given back from github)
+    def extract_notebook_path_from_args(self, args):
+        error = args.get("error_description", None)
+        if error is not None:
+            if (len(error) >= 0):
+                raise_github_error(error)
+
+        path_bytes = args.get("nb_path", None)
+        if path_bytes is None or len(path_bytes) <= 0:
+            raise_error("Couldn't extract notebook path from response")
+
+        # If we get here, everything was good - no errors
+        nb_path = base64.b64decode(path_bytes[0]).decode('utf-8').lstrip("/")
+        return nb_path
+
 
     def request_access_token(self, access_code):
 
@@ -171,7 +172,7 @@ class GistHandler(BaseHandler):
     def get(self):
 
         # Extract access code
-        access_code = extract_code_from_args(self.request.arguments)
+        access_code = self.extract_code_from_args(self.request.arguments)
 
         # Request access token from github
         access_token = self.request_access_token(access_code)
@@ -180,7 +181,7 @@ class GistHandler(BaseHandler):
                             "Authorization" : "token " + access_token }
 
         # Extract notebook path
-        nb_path = extract_notebook_path_from_args(self.request.arguments)
+        nb_path = self.extract_notebook_path_from_args(self.request.arguments)
 
         # Extract file name
         filename, filename_no_ext = self.get_notebook_filename(nb_path)
