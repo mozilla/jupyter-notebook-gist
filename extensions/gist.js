@@ -58,6 +58,11 @@ define(function () {
 
     var load_from_url = function() {
         var url = prompt("Enter a Gist URL");
+        if (url == "" || url == null) {
+            // prompt() returns "" if empty value, or null 
+            // if user clicked cancel, want to abort in either case
+            return;
+        }
         // TODO: check that it's a valid URL
         var parser = document.createElement('a');
         parser.href = url;
@@ -112,6 +117,11 @@ define(function () {
                 // used if file already exists
                 var newname = prompt("File already exists. Please enter a new name.\nNote: This may overwrite existing files.", 
                                      name);
+                if (newname == "" || newname == null) {
+                    // prompt() returns "" if empty value, or null 
+                    // if user clicked cancel, want to abort in either case
+                    return;
+                }
                 download_nb_on_server(url, newname, true);
             } else if (xhr.status == 200) {
                 window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + encodeURIComponent(this.responseText));
