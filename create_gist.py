@@ -136,6 +136,7 @@ class GistHandler(IPythonHandler):
 
 class DownloadNotebookHandler(IPythonHandler):
     def post(self):
+        # url and filename are sent in a JSON encoded blob
         post_data = tornado.escape.json_decode(self.request.body) 
 
         nb_url = post_data["nb_url"]

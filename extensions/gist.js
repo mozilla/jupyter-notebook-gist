@@ -59,51 +59,65 @@ define(function () {
     };
 
     var load_from_url = function() {
-        var gist_url = prompt("Enter a Gist URL");
+        var url = prompt("Enter a Gist URL");
         // TODO: check that it's a valid URL
 
-        var gist_url_parts = gist_url.split('/');
-        var gist_id = gist_url_parts[gist_url_parts.length-1];
+        var parser = document.createElement('a');
+        parser.href = url;
+        if (parser.hostname.indexOf('gist.github.com') > -1) {
+            // this is a gist URL, extract the raw_url for the .ipynb file
 
-        var url = "https://api.github.com/gists/" + gist_id;
 
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                var res = JSON.parse(xhr.responseText);
+            var gist_url_parts = url.split('/');
+            var gist_id = gist_url_parts[gist_url_parts.length-1];
 
-                for (var filename in res.files) {
-                    if (!res.files.hasOwnProperty(filename)) continue;
+            var gist_api_url = "https://api.github.com/gists/" + gist_id;
 
-                    if (filename.endsWith('.ipynb')) {
-                        var post_xhr = new XMLHttpRequest();
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var res = JSON.parse(xhr.responseText);
 
-                        var nb_info = {
-                            nb_url: res.files[filename].raw_url,
-                            nb_name: filename
+                    for (var filename in res.files) {
+                        if (!res.files.hasOwnProperty(filename)) continue;
+
+                        if (filename.endsWith('.ipynb')) {
+                            download_nb_on_server(res.files[filename].raw_url, filename);
                         }
-                        post_xhr.open("POST",  "/download_gist", true);
-                        post_xhr.setRequestHeader('Content-Type', 'application/json');
-                        post_xhr.onload = function () {
-                            console.log(this.responseText);
-                            window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + this.responseText);
-                        };
-                        post_xhr.send(JSON.stringify(nb_info));
-
-
-
                     }
-                }
 
-                console.log(res);
-            } else if (xhr.readyState == 4 && xhr.status == 404) {
-                alert("Gist not found")
-            } else if (xhr.readyState == 4) {
-                alert("Couldn't load Gist.")
+                    console.log(res);
+                } else if (xhr.readyState == 4 && xhr.status == 404) {
+                    alert("Gist not found")
+                } else if (xhr.readyState == 4) {
+                    alert("Couldn't load Gist.")
+                }
             }
+            xhr.open("GET", gist_api_url, true);
+            xhr.send(null);
+        } else if (url.indexOf('.ipynb', url.length - '.ipynb'.length) !== -1) {
+            // URL is a raw .ipynb file
+
+            var nb_pathname_parts = parser.pathname.split('/');
+            var filename = decodeURIComponent(nb_pathname_parts[nb_pathname_parts.length - 1]);
+            download_nb_on_server(url, filename);
         }
-        xhr.open("GET", url, true);
-        xhr.send(null);
+    }
+
+    var download_nb_on_server = function(url, name) {
+        var xhr = new XMLHttpRequest();
+
+        var nb_info = {
+            nb_url: url,
+            nb_name: window.btoa(name)
+        }
+        xhr.open("POST",  "/download_notebook", true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function () {
+            console.log(this.responseText);
+            window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + encodeURIComponent(this.responseText));
+        };
+        xhr.send(JSON.stringify(nb_info));
     }
 
     var gist_button = function () {
