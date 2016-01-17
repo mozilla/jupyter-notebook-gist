@@ -37,7 +37,11 @@ function url_path_split(path) {
     }
 }
 
-define(function () {
+function is_url_valid(url) {
+    return /^(https?|s?ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(url);
+}
+
+define(['jquery'], function ($) {
     var github_redirect_uri = get_base_path() + "/create_gist";
     var gist_notebook = function () {
         // Save the notebook and create a checkpoint to ensure that we create
@@ -57,13 +61,16 @@ define(function () {
     };
 
     var load_from_url = function() {
-        var url = prompt("Enter a Gist URL");
+        var url = prompt("Enter a Gist or .ipynb file URL");
         if (url == "" || url == null) {
             // prompt() returns "" if empty value, or null 
             // if user clicked cancel, want to abort in either case
             return;
         }
-        // TODO: check that it's a valid URL
+        if (!is_url_valid(url)) {
+            alert('Invalid URL.');
+            return;
+        }
         var parser = document.createElement('a');
         parser.href = url;
         if (parser.hostname.indexOf('gist.github.com') > -1) {
@@ -86,7 +93,7 @@ define(function () {
                         }
                         console.log(res);
                     } else if (xhr.status == 404) {
-                        alert("Gist not found")
+                        alert("Gist not found.")
                     } else {
                         alert("Couldn't load Gist.")
                     }
@@ -143,10 +150,10 @@ define(function () {
                     'callback': gist_notebook,
                     'id'      : 'gist_notebook'
                 }, {
-                    'label'   : 'load notebook from gist URL',
+                    'label'   : 'load notebook from URL',
                     'icon'    : 'fa-link',
                     'callback': load_from_url,
-                    'id'      : 'load_gist_from_url'
+                    'id'      : 'load_notebook_from_url'
                 }
             ]);
         }
@@ -154,7 +161,6 @@ define(function () {
 
     var load_ipython_extension = function () {
         gist_button();
-        console.log("loaded gist.js");
     };
 
     return {
