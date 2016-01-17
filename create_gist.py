@@ -3,9 +3,13 @@ from notebook.base.handlers import IPythonHandler
 from nbconvert.exporters.export import *
 import base64
 import json
-import os.path
 import requests
 import tornado
+import os
+import logging
+
+# Example usage: tornado_logger.error("This is an error!")
+tornado_logger = logging.getLogger("tornado.application")
 
 def raise_error(msg):
     raise tornado.web.HTTPError(500, "ERROR: " + msg)
@@ -50,7 +54,7 @@ class BaseHandler(IPythonHandler):
 
     def request_access_token(self, access_code):
 
-         # Request access token from github
+        # Request access token from github
         token_response = requests.post("https://github.com/login/oauth/access_token",
             data = {
                 "client_id": BaseHandler.client_id,
@@ -114,6 +118,8 @@ class BaseHandler(IPythonHandler):
                 if "id" in gist:
                     matchID = gist["id"]
 
+        # TODO: This probably shouldn't actually be an error
+        # Instead, we should ask the user which gist they meant?
         if match_counter > 1:
             raise_error("You had multiple gists with the same name as this notebook. Aborting.")
 
@@ -158,7 +164,6 @@ class BaseHandler(IPythonHandler):
         # If we return without erroring we are good
         self.redirect(gist_url)
 
-
 # This handler will save out the notebook to GitHub gists in either a new Gist 
 # or it will create a new revision for a gist that already contains these two files.
 class GistHandler(BaseHandler):
@@ -200,14 +205,38 @@ class GistHandler(BaseHandler):
                                 filename_with_py, access_token)
 
         # If no gist with this name exists yet, create a new gist
-        if matchID == None:
+        if matchID is None:
             gist_response = self.create_new_gist(gist_contents, access_token)
 
         # If we have another gist with the same files, create a new revision
         # Note: The case where we have multiple gists with the files is handled by find_existing_gist_by_name
         # This else catches the case where there is exactly 1 match
         else: 
-            gist_response = self.edit_existing_gist(gist_contents, matchID, access_token)         
+            gist_response = self.edit_existing_gist(gist_contents, matchID, access_token)  
+
+
+class DownloadNotebookHandler(IPythonHandler):
+    def post(self):
+        # url and filename are sent in a JSON encoded blob
+        post_data = tornado.escape.json_decode(self.request.body) 
+
+        nb_url = post_data["nb_url"]
+        nb_name = base64.b64decode(post_data["nb_name"]).decode('utf-8')
+        force_download = post_data["force_download"]
+
+        file_path = os.path.join(os.getcwd(), nb_name)
+
+        if os.path.isfile(file_path):
+            if not force_download:
+                raise tornado.web.HTTPError(409, "ERROR: File already exists.")
+
+        r = requests.get(nb_url, stream=True)
+        with open(file_path, 'wb') as fd:
+            for chunk in r.iter_content(1024): # TODO: check if this is a good chunk size
+                fd.write(chunk)
+
+        self.write(nb_name)
+        self.flush()
 
 
 def load_jupyter_server_extension(nb_server_app):
@@ -220,4 +249,9 @@ def load_jupyter_server_extension(nb_server_app):
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
     route_pattern = url_path_join(web_app.settings['base_url'], '/create_gist')
-    web_app.add_handlers(host_pattern, [(route_pattern, GistHandler)])
+    download_notebook_route_pattern = url_path_join(web_app.settings['base_url'], '/download_notebook')
+
+
+    web_app.add_handlers(host_pattern, [(route_pattern, GistHandler), (download_notebook_route_pattern, DownloadNotebookHandler)])
+
+
