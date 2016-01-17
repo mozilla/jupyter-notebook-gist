@@ -3,9 +3,9 @@ from notebook.base.handlers import IPythonHandler
 from nbconvert.exporters.export import *
 import base64
 import json
-import os.path
 import requests
 import tornado
+import os
 import logging
 
 # Example usage: tornado_logger.error("This is an error!")
@@ -135,6 +135,30 @@ class GistHandler(IPythonHandler):
         self.redirect(gist_url)
 
 
+class DownloadNotebookHandler(IPythonHandler):
+    def post(self):
+        # url and filename are sent in a JSON encoded blob
+        post_data = tornado.escape.json_decode(self.request.body) 
+
+        nb_url = post_data["nb_url"]
+        nb_name = base64.b64decode(post_data["nb_name"]).decode('utf-8')
+        force_download = post_data["force_download"]
+
+        file_path = os.path.join(os.getcwd(), nb_name)
+
+        if os.path.isfile(file_path):
+            if not force_download:
+                raise tornado.web.HTTPError(409, "ERROR: File already exists.")
+
+        r = requests.get(nb_url, stream=True)
+        with open(file_path, 'wb') as fd:
+            for chunk in r.iter_content(1024): # TODO: check if this is a good chunk size
+                fd.write(chunk)
+
+        self.write(nb_name)
+        self.flush()
+
+
 def load_jupyter_server_extension(nb_server_app):
 
     # Extract our gist client details from the config:
@@ -145,4 +169,9 @@ def load_jupyter_server_extension(nb_server_app):
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
     route_pattern = url_path_join(web_app.settings['base_url'], '/create_gist')
-    web_app.add_handlers(host_pattern, [(route_pattern, GistHandler)])
+    download_notebook_route_pattern = url_path_join(web_app.settings['base_url'], '/download_notebook')
+
+
+    web_app.add_handlers(host_pattern, [(route_pattern, GistHandler), (download_notebook_route_pattern, DownloadNotebookHandler)])
+
+
