@@ -5,20 +5,16 @@ import base64
 import json
 import os.path
 import requests
-<<<<<<< HEAD
 import urllib.request
 import shutil
 import tornado
 import os
-=======
-import tornado
 
 def raise_error(msg):
     raise tornado.web.HTTPError(500, "ERROR: " + msg)
 
 def raise_github_error(msg):
     raise tornado.web.HTTPError(500, "ERROR: Github returned the following: " + msg)
->>>>>>> origin/master
 
 # This handler will save out the notebook to GitHub gists in either a new Gist 
 # or it will create a new revision for a gist that already contains these two files.
