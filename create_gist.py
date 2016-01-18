@@ -132,7 +132,7 @@ class BaseHandler(IPythonHandler):
         github_headers = { "Accept" : "application/json",
                             "Authorization" : "token " + access_token }
 
-        requests.post("https://api.github.com/gists",
+        gist_response = requests.post("https://api.github.com/gists",
                 data = json.dumps(gist_contents),
                 headers = github_headers)
 
