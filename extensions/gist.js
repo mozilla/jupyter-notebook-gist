@@ -120,6 +120,42 @@ define(function () {
         xhr.send(JSON.stringify(nb_info));
     }
 
+    var load_user_gists = function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/load_user_gists");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onload = function(){
+            console.log("typeof response text is ");
+            console.log(typeof xhr.responseText);
+            Jupyter.dialog.modal({
+                title: "Gists",
+                body: format_user_gists(xhr.responseText),
+                buttons: {
+                    "OK": {}
+                }
+            });
+        };
+        xhr.send(null);
+    };
+
+    var format_user_gists = function(responseText) { 
+        var body = $('<div>').addClass("list_container");
+        var header = $('<tr/>').addClass("row list_header");
+        header.append("<td>"+"Gist Description"+"</td>");
+        header.append("<td>"+"Gist URL"+"</td>");
+        body.append(header);
+        var row;
+        var json_response = JSON.parse(responseText);
+        for (var i=0; i<json_response.length; i++) {
+            row = $('<tr/>').addClass("list_item row");
+            row.append("<td>" + json_response[i].description + "</td>");
+            row.append("<td><a href='" + json_response[i].url + "'>link to gist</a></td>");
+            body.append(row);
+        };
+
+        return body;
+    };
+
     var gist_button = function () {
         if (!Jupyter.toolbar) {
             $([Jupyter.events]).on("app_initialized.NotebookApp", gist_button);
@@ -137,6 +173,11 @@ define(function () {
                     'icon'    : 'fa-link',
                     'callback': load_from_url,
                     'id'      : 'load_gist_from_url'
+                }, {
+                    'label'   : 'load user gists',
+                    'icon'    : 'fa-github',
+                    'callback': load_user_gists,
+                    'id'      : 'load_user_gists',
                 }
             ]);
         }
