@@ -24,13 +24,24 @@ class BaseHandler(IPythonHandler):
 
     # Extracts the access code from the arguments dictionary (given back from github)
     def extract_code_from_args(self, args):
+
+        if args is None:
+            raise_error("Couldn't extract github authentication code from response")
+
+        # TODO: Is there a case where the length of the error will be < 0?
         error = args.get("error_description", None)
         if error is not None:
             if (len(error) >= 0):
                 raise_github_error(error)
+            else:
+                raise_error("Something went wrong")
 
         access_code = args.get("code", None)
-        if access_code is None or len(access_code) <= 0:
+
+        # TODO: theoretically access_code is supposed to be a list with 1 thing in it...
+        # How do we check to see if a) it is a list b) it has 1 element and c) the element is longer
+        # than 0 length?  Is this right?
+        if access_code is None or access_code[0] is None or len(access_code) != 1 or len(access_code[0]) <= 0:
             raise_error("Couldn't extract github authentication code from response"),
 
         # If we get here, everything was good - no errors
