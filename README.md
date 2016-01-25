@@ -2,7 +2,15 @@
 
 Create a gist from the Jupyter Notebook UI.
 
-Edit your `jupyter_notebook_config.py` file to specify the github client id and secret:
+To install, clone/download the project and run `pip install .` from a shell in the project's root directory.
+
+If you have previously installed jupyter-notebook-gist using the old method (which involved manually copying `gist.js` into the
+right directory), clean out the following before installing:
+
+- Any jupyter-notebook-gist data in `jupyter_notebook_config.py` (if the file exists) that is not in the config code below
+- `gist.js`, which is located in one of your nbextensions directories
+
+After installing, edit your `jupyter_notebook_config.py` file to specify the github client id and secret:
 
 ```python
 from notebook.services.config import ConfigManager
@@ -17,3 +25,6 @@ Replace the vars above with a working client_id / secret. You can create one
 [here](https://github.com/settings/applications).
 
 Then run `jupyter notebook` from the repo root.
+
+For developers, you can uninstall the extension by deleting the jupyter-notebook-gist directory and `.egg-info` file from your
+Python installation's `site-packages` folder.
