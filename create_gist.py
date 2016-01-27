@@ -244,12 +244,10 @@ class LoadGistHandler(BaseHandler):
     
     def get(self):
 
-        # Extract access code
-        #access_code = self.extract_code_from_args(self.request.arguments)
+        # Note: This code isn't currently being used, as the request to 
+        # GitHub is being made in the Javascript file
 
-        # Request access token from github
-        #access_token = self.request_access_token(access_code)
-        access_token = "318ef9d288e72fb78ab1856e7085724cd9c63622"
+        access_token = ""
         github_headers = { "Accept" : "application/json",
                             "Authorization" : "token " + access_token } 
         

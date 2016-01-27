@@ -63,38 +63,44 @@ define(function () {
         parser.href = url;
         if (parser.hostname.indexOf('gist.github.com') > -1) {
             // this is a gist URL, extract the raw_url for the .ipynb file
-            var gist_url_parts = url.split('/');
-            var gist_id = gist_url_parts[gist_url_parts.length-1];
-
-            var gist_api_url = "https://api.github.com/gists/" + gist_id;
-
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState == XMLHttpRequest.DONE) {
-                    if (xhr.status == 200) {
-                        var res = JSON.parse(xhr.responseText);
-                        for (var filename in res.files) {
-                            if (!res.files.hasOwnProperty(filename)) continue;
-                            if (filename.endsWith('.ipynb')) {
-                                download_nb_on_server(res.files[filename].raw_url, filename, false);
-                            }
-                        }
-                        console.log(res);
-                    } else if (xhr.status == 404) {
-                        alert("Gist not found")
-                    } else {
-                        alert("Couldn't load Gist.")
-                    }
-                }
-            }
-            xhr.open("GET", gist_api_url, true);
-            xhr.send(null);
+            load_from_gist_url(url);
         } else if (url.indexOf('.ipynb', url.length - '.ipynb'.length) !== -1) {
             // URL is a raw .ipynb file
             var nb_pathname_parts = parser.pathname.split('/');
             var filename = decodeURIComponent(nb_pathname_parts[nb_pathname_parts.length - 1]);
             download_nb_on_server(url, filename, false);
         }
+    }
+
+    var load_from_gist_url = function(url) {
+        // this is a gist URL, extract the raw_url for the .ipynb file
+        var gist_url_parts = url.split('/');
+        var gist_id = gist_url_parts[gist_url_parts.length-1];
+
+        var gist_api_url = "https://api.github.com/gists/" + gist_id;
+
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+                if (xhr.status == 200) {
+                    var res = JSON.parse(xhr.responseText);
+                    for (var filename in res.files) {
+                        if (!res.files.hasOwnProperty(filename)) continue;
+                        if (filename.endsWith('.ipynb')) {
+                            download_nb_on_server(res.files[filename].raw_url, filename, false);
+                        }
+                    }
+                    console.log("no ipynb files found");
+                    console.log(res);
+                } else if (xhr.status == 404) {
+                    alert("Gist not found")
+                } else {
+                    alert("Couldn't load Gist.")
+                }
+            }
+        }
+        xhr.open("GET", gist_api_url, true);
+        xhr.send(null);
     }
 
     var download_nb_on_server = function(url, name, force_download) {
@@ -126,6 +132,7 @@ define(function () {
         // (TODO: handle cases where user inputs bad things as their username)
         var github_username = prompt("Please enter your GitHub username in order to retrieve your public gists.");
         var gist_api_url = "https://api.github.com/users/"+github_username+"/gists";
+
         var xhr = new XMLHttpRequest();
         xhr.open("GET", gist_api_url, true);
         xhr.setRequestHeader("Content-Type", "application/json");
@@ -149,9 +156,7 @@ define(function () {
         header.append("<th>"+"Last Updated" + "</th>");
         header.append("<th>"+"Gist URL"+"</th>");
         body.append(header);
-        var row;
-        var button;
-        var files;
+        var row, button, files;
         var json_response = JSON.parse(responseText);
         for (var i=0; i<json_response.length; i++) {
             files = json_response[i].files;
@@ -162,6 +167,7 @@ define(function () {
             row.append("<td>" + files[Object.keys(files)[0]].filename + "</td>");
             row.append("<td>" + json_response[i].description + "</td>");
             row.append("<td>" + json_response[i].updated_at + "</td>");
+            // Create button to load notebook 
             button = $('<button>Load Gist</button>').addClass("btn btn-default btn-sm");
             button.click({url: json_response[i].html_url}, load_gist_from_click);
             button.appendTo(row);
@@ -173,34 +179,7 @@ define(function () {
 
     var load_gist_from_click = function(event) {
         var url = event.data.url;
-        // this is a gist URL, extract the raw_url for the .ipynb file
-        var gist_url_parts = url.split('/');
-        var gist_id = gist_url_parts[gist_url_parts.length-1];
-
-        var gist_api_url = "https://api.github.com/gists/" + gist_id;
-
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == XMLHttpRequest.DONE) {
-                if (xhr.status == 200) {
-                    var res = JSON.parse(xhr.responseText);
-                    for (var filename in res.files) {
-                        if (!res.files.hasOwnProperty(filename)) continue;
-                        if (filename.endsWith('.ipynb')) {
-                            download_nb_on_server(res.files[filename].raw_url, filename, false);
-                        }
-                    }
-                    console.log("no ipynb files found");
-                    console.log(res);
-                } else if (xhr.status == 404) {
-                    alert("Gist not found")
-                } else {
-                    alert("Couldn't load Gist.")
-                }
-            }
-        }
-        xhr.open("GET", gist_api_url, true);
-        xhr.send(null);
+        load_from_gist_url(url);
     };
 
     var gist_button = function () {
