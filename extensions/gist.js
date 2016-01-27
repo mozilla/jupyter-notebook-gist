@@ -121,12 +121,15 @@ define(function () {
     }
 
     var load_user_gists = function() {
+        // TODO: Figure out how to deal with page redirect when obtaining GitHub access code
+        // For now, prompt user for their GitHub username to load their public gists
+        // (TODO: handle cases where user inputs bad things as their username)
+        var github_username = prompt("Please enter your GitHub username in order to retrieve your public gists.");
+        var gist_api_url = "https://api.github.com/users/"+github_username+"/gists";
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/load_user_gists");
+        xhr.open("GET", gist_api_url, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onload = function(){
-            console.log("typeof response text is ");
-            console.log(typeof xhr.responseText);
             Jupyter.dialog.modal({
                 title: "Gists",
                 body: format_user_gists(xhr.responseText),
@@ -139,21 +142,65 @@ define(function () {
     };
 
     var format_user_gists = function(responseText) { 
-        var body = $('<div>').addClass("list_container");
+        var body = $('<table/>').addClass("table");
         var header = $('<tr/>').addClass("row list_header");
-        header.append("<td>"+"Gist Description"+"</td>");
-        header.append("<td>"+"Gist URL"+"</td>");
+        header.append("<th>"+"Filename"+"</th>");
+        header.append("<th>"+"Description"+"</th>");
+        header.append("<th>"+"Last Updated" + "</th>");
+        header.append("<th>"+"Gist URL"+"</th>");
         body.append(header);
         var row;
+        var button;
+        var files;
         var json_response = JSON.parse(responseText);
         for (var i=0; i<json_response.length; i++) {
+            files = json_response[i].files;
+            // Only load notebook gists 
+            if (!files[Object.keys(files)[0]].filename.endsWith('.ipynb')) continue;
+            // Create row containing gist information
             row = $('<tr/>').addClass("list_item row");
+            row.append("<td>" + files[Object.keys(files)[0]].filename + "</td>");
             row.append("<td>" + json_response[i].description + "</td>");
-            row.append("<td><a href='" + json_response[i].url + "'>link to gist</a></td>");
+            row.append("<td>" + json_response[i].updated_at + "</td>");
+            button = $('<button>Load Gist</button>').addClass("btn btn-default btn-sm");
+            button.click({url: json_response[i].html_url}, load_gist_from_click);
+            button.appendTo(row);
             body.append(row);
         };
 
         return body;
+    };
+
+    var load_gist_from_click = function(event) {
+        var url = event.data.url;
+        // this is a gist URL, extract the raw_url for the .ipynb file
+        var gist_url_parts = url.split('/');
+        var gist_id = gist_url_parts[gist_url_parts.length-1];
+
+        var gist_api_url = "https://api.github.com/gists/" + gist_id;
+
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+                if (xhr.status == 200) {
+                    var res = JSON.parse(xhr.responseText);
+                    for (var filename in res.files) {
+                        if (!res.files.hasOwnProperty(filename)) continue;
+                        if (filename.endsWith('.ipynb')) {
+                            download_nb_on_server(res.files[filename].raw_url, filename, false);
+                        }
+                    }
+                    console.log("no ipynb files found");
+                    console.log(res);
+                } else if (xhr.status == 404) {
+                    alert("Gist not found")
+                } else {
+                    alert("Couldn't load Gist.")
+                }
+            }
+        }
+        xhr.open("GET", gist_api_url, true);
+        xhr.send(null);
     };
 
     var gist_button = function () {
@@ -175,7 +222,7 @@ define(function () {
                     'id'      : 'load_gist_from_url'
                 }, {
                     'label'   : 'load user gists',
-                    'icon'    : 'fa-github',
+                    'icon'    : 'fa-list-alt',
                     'callback': load_user_gists,
                     'id'      : 'load_user_gists',
                 }
@@ -185,7 +232,6 @@ define(function () {
 
     var load_ipython_extension = function () {
         gist_button();
-        console.log("loaded gist.js");
     };
 
     return {

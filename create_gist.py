@@ -256,7 +256,7 @@ class LoadGistHandler(BaseHandler):
         response = requests.get("https://api.github.com/gists", github_headers) 
                                            
         user_gists = json.loads(response.text)
-        print("The LoadGistHandler was called");
+
         # Only keep info we want:
         #  - gist id
         #  - description
@@ -264,13 +264,13 @@ class LoadGistHandler(BaseHandler):
         #  - updated_at
         #  - list of file names
         
-        important_keys = ["id", "updated_at", "description", "files", "url"]             
+        important_keys = ["id", "updated_at", "description", "files", "html_url"]             
         
         for i in range(len(user_gists)):
             gist_info = {}
             gist = user_gists[i]
             gist_info = {key: gist[key] for key in important_keys}
-            gist_info["files"] = [filename for filename in gist_info["files"]]
+            gist_info["filenames"] = [filename for filename in gist_info["files"]]
             user_gists[i] = gist_info
 
         self.finish(json.dumps(user_gists))
