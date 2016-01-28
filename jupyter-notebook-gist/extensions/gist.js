@@ -41,7 +41,10 @@ function is_url_valid(url) {
     return /^(https?|s?ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(url);
 }
 
-define(function () {
+define([
+    'base/js/utils',
+    'moment',
+    ], function (utils, moment) {
     var github_redirect_uri = get_base_path() + "/create_gist";
     var gist_notebook = function () {
         // Save the notebook and create a checkpoint to ensure that we create
@@ -183,17 +186,30 @@ define(function () {
         header.append("<th>"+"Last Updated" + "</th>");
         header.append("<th>"+"Gist URL"+"</th>");
         body.append(header);
-        var row, button, files;
+        var row, button, files, last_updated, pretty_date;
         var json_response = JSON.parse(responseText);
         for (var i=0; i<json_response.length; i++) {
             files = json_response[i].files;
+
+            // Use same formatting for date as SaveWidget's _render_chickpoint
+            last_updated = moment(json_response[i].updated_at);
+            var tdelta = Math.ceil(new Date() - last_updated);
+            if (tdelta < utils.time.milliseconds.d){
+                // less than 24 hours old, use relative date
+                pretty_date = last_updated.fromNow();
+            } else {
+                // otherwise show calendar 
+                // <Today | yesterday|...> at hh,mm,ss
+                pretty_date = last_updated.calendar();
+            }
+
             // Only load notebook gists 
             if (!files[Object.keys(files)[0]].filename.endsWith('.ipynb')) continue;
             // Create row containing gist information
             row = $('<tr/>').addClass("list_item row");
             row.append("<td>" + files[Object.keys(files)[0]].filename + "</td>");
             row.append("<td>" + json_response[i].description + "</td>");
-            row.append("<td>" + json_response[i].updated_at + "</td>");
+            row.append("<td>" + pretty_date + "</td>");
             // Create button to load notebook 
             button = $('<button>Load Gist</button>').addClass("btn btn-default btn-sm");
             button.click({url: json_response[i].html_url}, load_gist_from_click);
