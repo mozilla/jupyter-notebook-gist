@@ -75,7 +75,7 @@ class BaseHandler(IPythonHandler):
         token_type = token_args.get("token_type", None)
         scope = token_args.get("scope", None)
         if access_token is None or token_type is None or scope is None:
-            raise_error(token_args, "Couldn't extract needed info from github access token response")
+            raise_error("Couldn't extract needed info from github access token response")
 
         # If we get here everything is good
         return access_token #do not care about scope or token_type
