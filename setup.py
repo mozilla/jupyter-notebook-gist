@@ -6,7 +6,6 @@ EXT_DIR = os.path.join(os.path.dirname(__file__), 'jupyter-notebook-gist')
 
 class InstallCommand(install):
     def run(self):
-
         # Import inside run() so if the user doesn't have jupyter notebook yet, we grab that dependency,
         # then run this code which imports it.
         from notebook.nbextensions import install_nbextension
@@ -33,6 +32,8 @@ class InstallCommand(install):
 
 setup(
     name="jupyter-notebook-gist",
+    version="0.1.0",
+    description="Create a gist from the Jupyter Notebook UI",
     packages=["jupyter-notebook-gist"],
     install_requires = ["ipython >= 4", "jupyter-pip", "jupyter", "requests"],
     url="https://github.com/mreid-moz/jupyter-notebook-gist",
