@@ -244,34 +244,18 @@ class LoadGistHandler(BaseHandler):
     
     def get(self):
 
-        # Note: This code isn't currently being used, as the request to 
-        # GitHub is being made in the Javascript file
+        # Extract access code
+        access_code = self.extract_code_from_args(self.request.arguments)
 
-        access_token = ""
+        # Request access token from github
+        access_token = self.request_access_token(access_code)
+
         github_headers = { "Accept" : "application/json",
                             "Authorization" : "token " + access_token } 
         
-        response = requests.get("https://api.github.com/gists", github_headers) 
-                                           
-        user_gists = json.loads(response.text)
+        response = requests.get("https://api.github.com/gists", headers=github_headers) 
 
-        # Only keep info we want:
-        #  - gist id
-        #  - description
-        #  - gist url
-        #  - updated_at
-        #  - list of file names
-        
-        important_keys = ["id", "updated_at", "description", "files", "html_url"]             
-        
-        for i in range(len(user_gists)):
-            gist_info = {}
-            gist = user_gists[i]
-            gist_info = {key: gist[key] for key in important_keys}
-            gist_info["filenames"] = [filename for filename in gist_info["files"]]
-            user_gists[i] = gist_info
-
-        self.finish(json.dumps(user_gists))
+        self.finish("<script>var code = '"+response.text+"';window.opener.postMessage(code, window.location);window.close()</script>");
 
 
 def load_jupyter_server_extension(nb_server_app):

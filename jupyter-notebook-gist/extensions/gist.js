@@ -148,7 +148,7 @@ define([
         xhr.send(JSON.stringify(nb_info));
     }
 
-    var load_user_gists = function() {
+    var load_public_user_gists = function() {
         // TODO: Figure out how to deal with page redirect when obtaining GitHub access code
         // For now, prompt user for their GitHub username to load their public gists
         var github_username = prompt("Please enter your GitHub username in order to retrieve your public gists.");
@@ -178,6 +178,33 @@ define([
         xhr.send(null);
     };
 
+    var load_all_user_gists = function () {
+        var redirect_uri = get_base_path() + "/load_user_gists"
+
+        var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
+        var nb_path = window.btoa(Jupyter.notebook.base_url + Jupyter.notebook.notebook_path);
+
+        window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
+          "&scope=gist&redirect_uri=" + redirect_uri);
+        
+        var code;
+
+        // Listen for the response message containing the user's gists 
+        // that is sent from the LoadGistHandler
+        window.addEventListener('message', function(event) {
+            code = event.data;
+
+            Jupyter.dialog.modal({
+                title: "All User Gists",
+                body: format_user_gists(code),
+                buttons: {
+                    "OK": {}
+                }
+            });
+
+        })
+    };
+
     var format_user_gists = function(responseText) { 
         var body = $('<table/>').addClass("table");
         var header = $('<tr/>').addClass("row list_header");
@@ -190,8 +217,10 @@ define([
         var json_response = JSON.parse(responseText);
         for (var i=0; i<json_response.length; i++) {
             files = json_response[i].files;
+            // Only load notebook gists 
+            if (!files[Object.keys(files)[0]].filename.endsWith('.ipynb')) continue;
 
-            // Use same formatting for date as SaveWidget's _render_chickpoint
+            // Use same date formatting as SaveWidget's _render_checkpoint
             last_updated = moment(json_response[i].updated_at);
             var tdelta = Math.ceil(new Date() - last_updated);
             if (tdelta < utils.time.milliseconds.d){
@@ -203,8 +232,6 @@ define([
                 pretty_date = last_updated.calendar();
             }
 
-            // Only load notebook gists 
-            if (!files[Object.keys(files)[0]].filename.endsWith('.ipynb')) continue;
             // Create row containing gist information
             row = $('<tr/>').addClass("list_item row");
             row.append("<td>" + files[Object.keys(files)[0]].filename + "</td>");
@@ -243,10 +270,15 @@ define([
                     'callback': load_from_url,
                     'id'      : 'load_notebook_from_url'
                 }, {
-                    'label'   : 'load user gists',
+                    'label'   : 'load public user gists',
                     'icon'    : 'fa-list-alt',
-                    'callback': load_user_gists,
-                    'id'      : 'load_user_gists',
+                    'callback': load_public_user_gists,
+                    'id'      : 'load_public_user_gists',
+                }, {
+                    'label'   : 'load all user gists',
+                    'icon'    : 'fa-list',
+                    'callback': load_all_user_gists,
+                    'id'      : 'load_all_user_gists',
                 }
             ]);
         }
