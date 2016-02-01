@@ -49,6 +49,7 @@ class TestError(unittest.TestCase):
 # So instead I called them like a static function, passing in None where self is supposed to be...
 class TestBaseHandler(unittest.TestCase):
 
+	# extract_code_from args tests
 	def test_extract_code_from_args_valid(self):
 
 		args = { "code" : [b"some code"] }
@@ -158,10 +159,179 @@ class TestBaseHandler(unittest.TestCase):
 		else:
 			assert(False)
 
+	############### end of extract_code_from_args tests #################
+
+	#extract_notebook_path_from_args tests
+	def test_extract_notebook_path_from_args_valid(self):
+
+		# Make a string, encode it into bytes via encode, then convert to base 64 since
+		# thats what github gives
+		somePath = "somepath"
+		somePath = somePath.encode('utf-8')
+		somePath = base64.b64encode(somePath)
+		
+		args = { "nb_path" : [somePath] }
+		
+
+		self.assertEqual(BaseHandler.extract_notebook_path_from_args(None, args), "somepath")
+
+	def test_extract_notebook_path_from_args_none_in_list(self):
+
+		args = { "nb_path" : [None] }
+
+		try:
+			BaseHandler.extract_notebook_path_from_args(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't extract notebook path from response)")
+		else:
+			assert(False)
+
+	def test_extract_notebook_path_from_args_none(self):
+
+		args = None
+
+		try:
+			BaseHandler.extract_notebook_path_from_args(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't extract notebook path from response)")
+		else:
+			assert(False)
+
+	def test_extract_notebook_path_from_args_code_is_none(self):
+
+		args = { "nb_path" : None}
+
+		try:
+			BaseHandler.extract_notebook_path_from_args(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't extract notebook path from response)")
+		else:
+			assert(False)
+
+	def test_extract_notebook_path_from_args_code_is_char(self):
+
+		# Make a string, encode it into bytes via encode, then convert to base 64 since
+		# thats what github gives
+		somePath = "a"
+		somePath = somePath.encode('utf-8')
+		somePath = base64.b64encode(somePath)
+		
+		args = { "nb_path" : [somePath] }
+
+		self.assertEqual(BaseHandler.extract_notebook_path_from_args(None, args), "a")
+
+	def test_extract_notebook_path_from_args_code_is_empty_str(self):
+
+		args = { "nb_path" : [b""] }
+
+		try:
+			BaseHandler.extract_notebook_path_from_args(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't extract notebook path from response)")
+		else:
+			assert(False)
+
+	def test_extract_notebook_path_from_args_long_code_list(self):
+
+		somePathA = "a"
+		somePathA = somePathA.encode('utf-8')
+		somePathA = base64.b64encode(somePathA)
+
+		somePathB = "b"
+		somePathB = somePathB.encode('utf-8')
+		somePathB = base64.b64encode(somePathB)
+
+		args = { "code" : [somePathA, somePathB] }
+
+		try:
+			BaseHandler.extract_notebook_path_from_args(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't extract notebook path from response)")
+		else:
+			assert(False)
+
+	def test_extract_notebook_path_from_args_with_error_(self):
+
+		args = { "error_description" : "This is an error!"}
+
+		try:
+			BaseHandler.extract_notebook_path_from_args(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Github returned the following: This is an error!)")
+		else:
+			assert(False)
+
+	def test_extract_notebook_path_from_args_with_empty_error_(self):
+
+		args = { "error_description" : ""}
+
+		try:
+			BaseHandler.extract_notebook_path_from_args(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Github returned the following: )")
+		else:
+			assert(False)
+
+	# This test succeeds the error description part, but fails the extraction
+	def test_extract_notebook_path_from_args_with_none_error_(self):
+
+		args = { "error_description" : None }
+
+		try:
+			BaseHandler.extract_notebook_path_from_args(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't extract notebook path from response)")
+		else:
+			assert(False)
+
+	################end of extract_notebook_path_from_args tests
+
+	#request_access_token tests
+
+	#def test_request_access_token
+	################end of request_access_token tests
+
+	#get_notebook_filename tests
+
+	def test_get_notebook_filename_none(self):
+
+		self.assertEqual(BaseHandler.get_notebook_filename(None, None), (None, None))
+
+	def test_get_notebook_filename_empty(self):
+
+		self.assertEqual(BaseHandler.get_notebook_filename(None, ""), (None, None))
+
+	def test_get_notebook_filename_no_extension(self):
+
+		self.assertEqual(BaseHandler.get_notebook_filename(None, "somefile"), ("somefile", "somefile"))
+
+	def test_get_notebook_filename_extension(self):
+
+		self.assertEqual(BaseHandler.get_notebook_filename(None, "somefile.abc"), ("somefile.abc", "somefile"))
+	
+	def test_get_notebook_filename_path_no_extension(self):
+
+		self.assertEqual(BaseHandler.get_notebook_filename(None, "/a/b/c/somefile"), ("somefile", "somefile"))
+	
+	def test_get_notebook_filename_path_extension(self):
+
+		self.assertEqual(BaseHandler.get_notebook_filename(None, "/a/b/c/somefile.abc"), ("somefile.abc", "somefile"))
+
+	def test_get_notebook_filename_double_dot(self):
+
+		self.assertEqual(BaseHandler.get_notebook_filename(None, "some.file.abc"), ("some.file.abc", "some.file"))
+
 # TODO: Tests for:
-# extract_notebook_path_from_args
+
 # request_access_token
-# get_notebook_filename
 # get_notebook_contents
 # find_existing_gist_by_name
 # create_new_gist

@@ -38,10 +38,8 @@ class BaseHandler(IPythonHandler):
 
         access_code = args.get("code", None)
 
-        # TODO: theoretically access_code is supposed to be a list with 1 thing in it...
-        # How do we check to see if a) it is a list b) it has 1 element and c) the element is longer
-        # than 0 length?  Is this right?
-        if access_code is None or access_code[0] is None or len(access_code) != 1 or len(access_code[0]) <= 0:
+        # access_code is supposed to be a list with 1 thing in it
+        if not isinstance(access_code, list) or access_code[0] is None or len(access_code) != 1 or len(access_code[0]) <= 0:
             raise_error("Couldn't extract github authentication code from response"),
 
         # If we get here, everything was good - no errors
@@ -50,17 +48,24 @@ class BaseHandler(IPythonHandler):
 
     # Extracts the notebook path from the arguments dictionary (given back from github)
     def extract_notebook_path_from_args(self, args):
+        
+        if args is None:
+            raise_error("Couldn't extract notebook path from response")
+
         error = args.get("error_description", None)
         if error is not None:
             if (len(error) >= 0):
                 raise_github_error(error)
 
         path_bytes = args.get("nb_path", None)
-        if path_bytes is None or len(path_bytes) <= 0:
+         # path_bytes is supposed to be a list with 1 thing in it
+        if not isinstance(path_bytes, list) or path_bytes[0] is None or len(path_bytes) != 1 or len(path_bytes[0]) <= 0:
             raise_error("Couldn't extract notebook path from response")
 
         # If we get here, everything was good - no errors
+        print(path_bytes)
         nb_path = base64.b64decode(path_bytes[0]).decode('utf-8').lstrip("/")
+        print(nb_path)
         return nb_path
 
 
@@ -93,10 +98,13 @@ class BaseHandler(IPythonHandler):
 
     def get_notebook_filename(self, nb_path):
 
+        if not isinstance(nb_path, str) or len(nb_path) == 0:
+            return None, None
+
         # Extract file names given path to notebook
         filename = os.path.basename(nb_path)
         ext_start_ind = filename.rfind(".")
-        if ext_start_ind == -1:
+        if ext_start_ind == -1: # TODO: is it possible to have a notebook without an extension?
             filename_no_ext = filename
         else:
             filename_no_ext = filename[:ext_start_ind]
