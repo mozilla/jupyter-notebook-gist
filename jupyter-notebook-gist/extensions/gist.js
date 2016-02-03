@@ -138,7 +138,13 @@ define(function () {
     }
 
     var setup_info = function() {
-        alert('You haven\'t changed your GitHub client ID in your jupyter_notebook_config.py file. Please update your client ID and secret before using this plugin.');
+        Jupyter.dialog.modal({
+            title: "Error",
+            body: "You haven't changed your GitHub client ID in your jupyter_notebook_config.py file. Please update your client ID and secret before using this plugin.",
+            buttons: {
+                "OK": {}
+            }
+        });
     }
 
     var gist_button = function () {
