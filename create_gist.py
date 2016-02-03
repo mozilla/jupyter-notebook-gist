@@ -82,9 +82,9 @@ class BaseHandler(IPythonHandler):
 
         token_args = json.loads(token_response.text)
 
-        return _request_access_token(token_args)
+        return self._request_access_token(token_args)
 
-    def _request_access_token(token_args):        
+    def _request_access_token(self, token_args):        
 
         token_error = token_args.get("error_description", None)
         if token_error is not None:
@@ -136,11 +136,15 @@ class BaseHandler(IPythonHandler):
 
         response = requests.get("https://api.github.com/gists",
             headers = github_headers)
-        get_gists_args = json.loads(response.text)
+        gist_args = json.loads(response.text)
+
+        return self._find_existing_gist_by_name(gist_args, nb_filename, py_filename)
+
+    def _find_existing_gist_by_name(self, gist_args, nb_filename, py_filename):
 
         match_counter = 0;
         matchID = None
-        for gist in get_gists_args:
+        for gist in gist_args:
             gist_files = gist.get("files", None)
             if (gist_files is not None and nb_filename in gist_files
                     and py_filename in gist_files):
@@ -183,6 +187,18 @@ class BaseHandler(IPythonHandler):
     def verify_gist_response(self, gist_response):
 
         gist_response_json = gist_response.json()
+
+        gist_url = self._verify_gist_response(gist_response_json)
+        
+        # If we return without erroring we are good
+        self.redirect(gist_url)
+
+
+    def _verify_gist_response(self, gist_response_json):
+
+        if gist_response_json is None:
+            raise_error("Couldn't get the url for the gist that was just updated")
+
         update_gist_error = gist_response_json.get("error_description", None)
         if update_gist_error is not None:
             raise_github_error(update_gist_error)
@@ -191,8 +207,8 @@ class BaseHandler(IPythonHandler):
         if gist_url is None:
             raise_error("Couldn't get the url for the gist that was just updated")
 
-        # If we return without erroring we are good
-        self.redirect(gist_url)
+        return gist_url
+        
 
 # This handler will save out the notebook to GitHub gists in either a new Gist 
 # or it will create a new revision for a gist that already contains these two files.

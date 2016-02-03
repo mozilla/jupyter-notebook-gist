@@ -352,6 +352,7 @@ class TestBaseHandler(unittest.TestCase):
 		else:
 			assert(false)
 
+	# Note to pass this test, you must make a file called test.ipynb that has some stuff in it
 	def test_get_notebook_contents_notebook(self):
 		nb_content, python_content = BaseHandler.get_notebook_contents(None, "test.ipynb")
 		self.assertTrue(len(nb_content) > 0)
@@ -365,7 +366,7 @@ class TestBaseHandler(unittest.TestCase):
 		args = { "error_description" : "This is an error!" }
 
 		try:
-			BaseHandler._request_access_token(args)
+			BaseHandler._request_access_token(None, args)
 		except tornado.web.HTTPError as e:
 			self.assertEqual(str(e), 
 				"HTTP 500: Internal Server Error (ERROR: Github returned the following: This is an error!)")
@@ -377,7 +378,7 @@ class TestBaseHandler(unittest.TestCase):
 		args = { "error_description" : "" }
 
 		try:
-			BaseHandler._request_access_token(args)
+			BaseHandler._request_access_token(None, args)
 		except tornado.web.HTTPError as e:
 			self.assertEqual(str(e), 
 				"HTTP 500: Internal Server Error (ERROR: Github returned the following: )")
@@ -388,30 +389,123 @@ class TestBaseHandler(unittest.TestCase):
 
 		args = { "access_token" : "Token", "token_type" : "not none", "scope" : "not none" }
 
-		self.assertEqual(BaseHandler._request_access_token(args), "Token")
+		self.assertEqual(BaseHandler._request_access_token(None, args), "Token")
 
 	def test__request_access_token_invalid(self):
 
 		args = { "access_token" : None, "token_type" : "not none", "scope" : "not none" }
 
 		try:
-			BaseHandler._request_access_token(args)
+			BaseHandler._request_access_token(None, args)
 		except tornado.web.HTTPError as e:
 			self.assertEqual(str(e), 
 				"HTTP 500: Internal Server Error (ERROR: Couldn't extract needed info from github access token response)")
 		else:
 			assert(False)
 
+	####################end of _request_access_token tests
+
+	#_find_existing_gist_by_name tests
+	def test__find_existing_gist_by_name_none(self):
+
+		args = [ {"files" : None } ]
+
+		self.assertEqual(BaseHandler._find_existing_gist_by_name(None, args, "somename", "somename"), None)
 
 
+	def test__find_existing_gist_by_name_none_files(self):
 
-		
+		args = [ {"files" : [None] } ]
 
-# TODO: Tests for:
+		self.assertEqual(BaseHandler._find_existing_gist_by_name(None, args, "somename", "somename"), None)
 
-# find_existing_gist_by_name
-# create_new_gist
-# edit_existing_gist
-# verify_gist_response
-# GistHandler functions
-# How to test redirects?
+	def test__find_existing_gist_by_name_two_match(self):
+
+		args = [ {"files" : "somename" }, {"files" : "somename" } ]
+
+		try:
+			BaseHandler._find_existing_gist_by_name(None, args, "somename", "somename")
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: You had multiple gists with the same name as this notebook. Aborting.)")
+		else:
+			assert(False)
+
+	def test__find_existing_gist_by_name_no_match_not_empty(self):
+
+		args = [ {"files" : "apples" } ]
+
+		self.assertEqual(BaseHandler._find_existing_gist_by_name(None, args, "somename", "somename"), None)
+
+	def test__find_existing_gist_by_name_one_match(self):
+
+		args = [ {"files" : "somename", "id" : "123" } ]
+
+		self.assertEqual(BaseHandler._find_existing_gist_by_name(None, args, "somename", "somename"), "123")
+
+	def test__find_existing_gist_by_name_one_match_no_id(self):
+
+		args = [ {"files" : "somename" } ]
+
+		self.assertEqual(BaseHandler._find_existing_gist_by_name(None, args, "somename", "somename"), None)
+
+
+	######end of _find_existing_gist_by_name tests
+
+	#_verify_gist_response tests
+	def test__verify_gist_response_error(self):
+
+		args = { "error_description" : "This is an error!" }
+
+		try:
+			BaseHandler._verify_gist_response(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Github returned the following: This is an error!)")
+		else:
+			assert(False)
+
+	def test__verify_gist_response_valid(self):
+
+		args = { "html_url" : "some url" }
+
+		self.assertEqual(BaseHandler._verify_gist_response(None, args), "some url")
+
+	def test__verify_gist_response_no_url(self):
+
+		args = { "html_url" : None }
+
+		try:
+			BaseHandler._verify_gist_response(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't get the url for the gist that was just updated)")
+		else:
+			assert(False)
+
+	def test__verify_gist_response_none(self):
+
+		args = None
+
+		try:
+			BaseHandler._verify_gist_response(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't get the url for the gist that was just updated)")
+		else:
+			assert(False)
+
+	def test__verify_gist_response_none_error(self):
+
+		args = { "error_description" : None }
+
+		try:
+			BaseHandler._verify_gist_response(None, args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't get the url for the gist that was just updated)")
+		else:
+			assert(False)
+
+	############end of _verify_gist_response tests
+
