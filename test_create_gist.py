@@ -122,7 +122,7 @@ class TestBaseHandler(unittest.TestCase):
 		else:
 			assert(False)
 
-	def test_extract_code_from_args_with_error_(self):
+	def test_extract_code_from_args_with_error(self):
 
 		args = { "error_description" : "This is an error!"}
 
@@ -134,7 +134,7 @@ class TestBaseHandler(unittest.TestCase):
 		else:
 			assert(False)
 
-	def test_extract_code_from_args_with_empty_error_(self):
+	def test_extract_code_from_args_with_empty_error(self):
 
 		args = { "error_description" : ""}
 
@@ -147,7 +147,7 @@ class TestBaseHandler(unittest.TestCase):
 			assert(False)
 
 	# This test succeeds the error description part, but fails the access code
-	def test_extract_code_from_args_with_none_error_(self):
+	def test_extract_code_from_args_with_none_error(self):
 
 		args = { "error_description" : None }
 
@@ -294,7 +294,9 @@ class TestBaseHandler(unittest.TestCase):
 
 	################end of extract_notebook_path_from_args tests
 
-	#request_access_token tests
+	#request_access_token tests 
+
+	#how should we approach testing posting?
 
 	#def test_request_access_token
 	################end of request_access_token tests
@@ -329,10 +331,84 @@ class TestBaseHandler(unittest.TestCase):
 
 		self.assertEqual(BaseHandler.get_notebook_filename(None, "some.file.abc"), ("some.file.abc", "some.file"))
 
+	#####################end of get_notebook_filename tests
+
+	# get_notebook_contents tests
+	def test_get_notebook_contents_none(self):
+
+		self.assertEqual(BaseHandler.get_notebook_contents(None, None), (None, None))
+
+	def test_get_notebook_contents_empty(self):
+
+		self.assertEqual(BaseHandler.get_notebook_contents(None, ""), (None, None))
+
+	def test_get_notebook_contents_non_existent_notebook(self):
+
+		try:
+			nb_content, python_content = BaseHandler.get_notebook_contents(None, "doesntExist.ipynb")
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+			"HTTP 500: Internal Server Error (ERROR: Couldn't export notebook contents)")
+		else:
+			assert(false)
+
+	def test_get_notebook_contents_notebook(self):
+		nb_content, python_content = BaseHandler.get_notebook_contents(None, "test.ipynb")
+		self.assertTrue(len(nb_content) > 0)
+		self.assertTrue(len(python_content) > 0)
+
+	######################end of get_notebook_contents tests
+
+	#_request_access_token tests
+	def test__request_access_token_error(self):
+
+		args = { "error_description" : "This is an error!" }
+
+		try:
+			BaseHandler._request_access_token(args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Github returned the following: This is an error!)")
+		else:
+			assert(False)
+
+	def test__request_access_token_blank_error(self):
+
+		args = { "error_description" : "" }
+
+		try:
+			BaseHandler._request_access_token(args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Github returned the following: )")
+		else:
+			assert(False)
+
+	def test__request_access_token_valid(self):
+
+		args = { "access_token" : "Token", "token_type" : "not none", "scope" : "not none" }
+
+		self.assertEqual(BaseHandler._request_access_token(args), "Token")
+
+	def test__request_access_token_invalid(self):
+
+		args = { "access_token" : None, "token_type" : "not none", "scope" : "not none" }
+
+		try:
+			BaseHandler._request_access_token(args)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't extract needed info from github access token response)")
+		else:
+			assert(False)
+
+
+
+
+		
+
 # TODO: Tests for:
 
-# request_access_token
-# get_notebook_contents
 # find_existing_gist_by_name
 # create_new_gist
 # edit_existing_gist

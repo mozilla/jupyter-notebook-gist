@@ -82,6 +82,10 @@ class BaseHandler(IPythonHandler):
 
         token_args = json.loads(token_response.text)
 
+        return _request_access_token(token_args)
+
+    def _request_access_token(token_args):        
+
         token_error = token_args.get("error_description", None)
         if token_error is not None:
             raise_github_error(token_error)
@@ -91,7 +95,7 @@ class BaseHandler(IPythonHandler):
         token_type = token_args.get("token_type", None)
         scope = token_args.get("scope", None)
         if access_token is None or token_type is None or scope is None:
-            raise_error(token_args, "Couldn't extract needed info from github access token response")
+            raise_error("Couldn't extract needed info from github access token response")
 
         # If we get here everything is good
         return access_token #do not care about scope or token_type
@@ -113,9 +117,15 @@ class BaseHandler(IPythonHandler):
 
     def get_notebook_contents(self, nb_path):
 
+        if not isinstance(nb_path, str) or len(nb_path) == 0:
+            return None, None
+            
         # Extract file contents given the path to the notebook
-        notebook_output, _ = export_by_name("notebook", nb_path)
-        python_output, _ = export_by_name("python", nb_path)
+        try:
+            notebook_output, _ = export_by_name("notebook", nb_path)
+            python_output, _ = export_by_name("python", nb_path)
+        except FileNotFoundError as e:
+            raise_error("Couldn't export notebook contents")
 
         return (notebook_output, python_output)
 
