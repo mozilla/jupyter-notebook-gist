@@ -137,11 +137,27 @@ define(function () {
         xhr.send(JSON.stringify(nb_info));
     }
 
+    var setup_info = function() {
+        alert('You haven\'t changed your GitHub client ID in your jupyter_notebook_config.py file. Please update your client ID and secret before using this plugin.');
+    }
+
     var gist_button = function () {
         if (!Jupyter.toolbar) {
             $([Jupyter.events]).on("app_initialized.NotebookApp", gist_button);
             return;
         }
+
+        if (Jupyter.notebook.config.data.oauth_client_id == 'my_client_id') {
+            Jupyter.toolbar.add_buttons_group([{    
+                'label':    'jupyter-notebook-gist setup',
+                'icon':     'fa-github',
+                'callback': setup_info,
+                'id':       'setup_info'
+            }]);
+
+            return;
+        }
+
         if ($("#gist_notebook").length === 0) {
             Jupyter.toolbar.add_buttons_group([
                 {
