@@ -139,11 +139,12 @@ define(function () {
 
     var setup_info = function() {
         Jupyter.dialog.modal({
-            title: "Error",
-            body: "You haven't changed your GitHub client ID in your jupyter_notebook_config.py file. Please update your client ID and secret before using this plugin.",
+            title: "Configuration Incomplete",
+            body: "You haven't configured your GitHub Client ID in your jupyter_notebook_config.py file. Please set the Client ID and Secret before using this plugin. See <a href='https:\/\/github.com/mreid-moz/jupyter-notebook-gist/blob/master/README.md'>the README</a> for more info.",
             buttons: {
                 "OK": {}
-            }
+            },
+            sanitize: false
         });
     }
 
