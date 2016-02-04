@@ -305,11 +305,23 @@ class TestBaseHandler(unittest.TestCase):
 
 	def test_get_notebook_filename_none(self):
 
-		self.assertEqual(BaseHandler.get_notebook_filename(None, None), (None, None))
+		try:
+			filename, filename_no_ext = BaseHandler.get_notebook_filename(None, None)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Problem with notebook file name)")
+		else:
+			assert(False)
 
 	def test_get_notebook_filename_empty(self):
 
-		self.assertEqual(BaseHandler.get_notebook_filename(None, ""), (None, None))
+		try:
+			filename, filename_no_ext = BaseHandler.get_notebook_filename(None, "")
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Problem with notebook file name)")
+		else:
+			assert(False)
 
 	def test_get_notebook_filename_no_extension(self):
 
@@ -336,11 +348,23 @@ class TestBaseHandler(unittest.TestCase):
 	# get_notebook_contents tests
 	def test_get_notebook_contents_none(self):
 
-		self.assertEqual(BaseHandler.get_notebook_contents(None, None), (None, None))
+		try:
+			notebook_output, python_output = BaseHandler.get_notebook_contents(None, None)
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't export notebook contents)")
+		else:
+			assert(False)
 
 	def test_get_notebook_contents_empty(self):
 
-		self.assertEqual(BaseHandler.get_notebook_contents(None, ""), (None, None))
+		try:
+			notebook_output, python_output = BaseHandler.get_notebook_contents(None, "")
+		except tornado.web.HTTPError as e:
+			self.assertEqual(str(e), 
+				"HTTP 500: Internal Server Error (ERROR: Couldn't export notebook contents)")
+		else:
+			assert(False)
 
 	def test_get_notebook_contents_non_existent_notebook(self):
 

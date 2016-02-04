@@ -103,7 +103,7 @@ class BaseHandler(IPythonHandler):
     def get_notebook_filename(self, nb_path):
 
         if not isinstance(nb_path, str) or len(nb_path) == 0:
-            return None, None
+            raise_error("Problem with notebook file name")
 
         # Extract file names given path to notebook
         filename = os.path.basename(nb_path)
@@ -118,7 +118,7 @@ class BaseHandler(IPythonHandler):
     def get_notebook_contents(self, nb_path):
 
         if not isinstance(nb_path, str) or len(nb_path) == 0:
-            return None, None
+            raise_error("Couldn't export notebook contents")
             
         # Extract file contents given the path to the notebook
         try:
