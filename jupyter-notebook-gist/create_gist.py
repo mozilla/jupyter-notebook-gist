@@ -63,9 +63,8 @@ class BaseHandler(IPythonHandler):
             raise_error("Couldn't extract notebook path from response")
 
         # If we get here, everything was good - no errors
-        print(path_bytes)
         nb_path = base64.b64decode(path_bytes[0]).decode('utf-8').lstrip("/")
-        print(nb_path)
+
         return nb_path
 
 
