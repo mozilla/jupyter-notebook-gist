@@ -147,13 +147,20 @@ define(function () {
         });
     }
 
+    var is_valid_client_id = function(client_id) {
+        if (client_id === "my_client_id" || client_id === null || client_id === undefined) {
+            return false;
+        }
+        return true;
+    }
+
     var gist_button = function () {
         if (!Jupyter.toolbar) {
             $([Jupyter.events]).on("app_initialized.NotebookApp", gist_button);
             return;
         }
 
-        if (Jupyter.notebook.config.data.oauth_client_id == 'my_client_id') {
+        if (!is_valid_client_id(Jupyter.notebook.config.data.oauth_client_id)) {
             Jupyter.toolbar.add_buttons_group([{    
                 'label':    'jupyter-notebook-gist setup',
                 'icon':     'fa-github',
