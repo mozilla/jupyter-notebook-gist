@@ -184,8 +184,8 @@ define([
         var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
         var nb_path = window.btoa(Jupyter.notebook.base_url + Jupyter.notebook.notebook_path);
 
-        window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
-          "&scope=gist&redirect_uri=" + redirect_uri);
+        auth_window = window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
+                                  "&scope=gist&redirect_uri=" + redirect_uri);
         
         var code;
 
@@ -193,6 +193,7 @@ define([
         // that is sent from the LoadGistHandler
         window.addEventListener('message', function(event) {
             code = event.data;
+            auth_window.close();
 
             Jupyter.dialog.modal({
                 title: "All User Gists",
@@ -206,24 +207,28 @@ define([
     };
 
     var format_user_gists = function(responseText) { 
-        var body = $('<table/>').addClass("table");
+        var body = $('<table/>').attr({class: "table", id: "my_table"});
         var header = $('<tr/>').addClass("row list_header");
-        header.append("<th>"+"Filename"+"</th>");
-        header.append("<th>"+"Description"+"</th>");
-        header.append("<th>"+"Last Updated" + "</th>");
-        header.append("<th>"+"Gist URL"+"</th>");
+        header.append("<th>Filename</th>");
+        header.append("<th>Description</th>");
+        header.append("<th>Last Updated</th>");
+        header.append("<th>Open Notebook</th>");
         body.append(header);
         var row, button, files, last_updated, pretty_date;
         var json_response = JSON.parse(responseText);
-        for (var i=0; i<json_response.length; i++) {
+        // create flag to check if a notebook has been loaded
+        var notebook_loaded = false;
+
+        for (var i = 0; i < json_response.length; i++) {
             files = json_response[i].files;
             // Only load notebook gists 
             if (!files[Object.keys(files)[0]].filename.endsWith('.ipynb')) continue;
+            notebook_loaded = true;
 
             // Use same date formatting as SaveWidget's _render_checkpoint
             last_updated = moment(json_response[i].updated_at);
             var tdelta = Math.ceil(new Date() - last_updated);
-            if (tdelta < utils.time.milliseconds.d){
+            if (tdelta < utils.time.milliseconds.d) {
                 // less than 24 hours old, use relative date
                 pretty_date = last_updated.fromNow();
             } else {
@@ -238,11 +243,22 @@ define([
             row.append("<td>" + json_response[i].description + "</td>");
             row.append("<td>" + pretty_date + "</td>");
             // Create button to load notebook 
-            button = $('<button>Load Gist</button>').addClass("btn btn-default btn-sm");
+            button_td = $('<td/>');
+            button = $('<button>Open</button>').addClass("btn btn-default btn-sm");
             button.click({url: json_response[i].html_url}, load_gist_from_click);
-            button.appendTo(row);
+            button.appendTo(button_td);
+            row.append(button_td);
             body.append(row);
         };
+
+        // Inform user if no public notebooks were found
+        if (!notebook_loaded) {
+            row = $('<tr/>').addClass("list_item row");
+            row_message = $('<td/>').attr("colspan", "4");
+            row_message.text('No public notebooks found.');
+            row.append(row_message);
+            body.append(row);
+        }
 
         return body;
     };
