@@ -32,9 +32,10 @@ class InstallCommand(install):
 
 setup(
     name="jupyter-notebook-gist",
-    version="0.1.0",
+    version="0.1.1",
     description="Create a gist from the Jupyter Notebook UI",
     packages=["jupyter-notebook-gist"],
+    package_data={'': ['extensions/gist.js']},
     install_requires = ["ipython >= 4", "jupyter-pip", "jupyter", "requests"],
     url="https://github.com/mreid-moz/jupyter-notebook-gist",
     cmdclass = {"install": InstallCommand}
