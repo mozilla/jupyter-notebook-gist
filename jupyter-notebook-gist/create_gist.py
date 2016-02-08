@@ -1,6 +1,7 @@
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 from nbconvert.exporters.export import *
+from tornado.web import HTTPError
 import base64
 import json
 import requests
@@ -13,12 +14,11 @@ tornado_logger = logging.getLogger("tornado.application")
 
 
 def raise_error(msg):
-    raise tornado.web.HTTPError(500, "ERROR: " + msg)
+    raise HTTPError(500, "ERROR: " + msg)
 
 
 def raise_github_error(msg):
-    raise tornado.web.HTTPError(500,
-                                "ERROR: Github returned the following: " + msg)
+    raise HTTPError(500, "ERROR: Github returned the following: " + msg)
 
 
 class BaseHandler(IPythonHandler):
@@ -247,7 +247,7 @@ class DownloadNotebookHandler(IPythonHandler):
 
         if os.path.isfile(file_path):
             if not force_download:
-                raise tornado.web.HTTPError(409, "ERROR: File already exists.")
+                raise HTTPError(409, "ERROR: File already exists.")
 
         r = requests.get(nb_url, stream=True)
         with open(file_path, 'wb') as fd:
