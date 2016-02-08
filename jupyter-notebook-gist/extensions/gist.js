@@ -43,7 +43,7 @@ function is_url_valid(url) {
 
 define([
     'base/js/utils',
-    'moment',
+    'moment'
     ], function (utils, moment) {
     var github_redirect_uri = get_base_path() + "/create_gist";
     var gist_notebook = function () {
@@ -178,6 +178,20 @@ define([
         xhr.send(null);
     };
 
+    // Listen for the response message containing the user's gists 
+    // that is sent from the LoadGistHandler
+    var auth_window;
+    window.addEventListener('message', function(event) {
+        auth_window.close();
+        Jupyter.dialog.modal({
+            title: "All User Gists",
+            body: format_user_gists(event.data),
+            buttons: {
+                "OK": {}
+            }
+        })
+    });
+
     var load_all_user_gists = function () {
         var redirect_uri = get_base_path() + "/load_user_gists"
 
@@ -185,35 +199,20 @@ define([
         var nb_path = window.btoa(Jupyter.notebook.base_url + Jupyter.notebook.notebook_path);
 
         auth_window = window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
-                                  "&scope=gist&redirect_uri=" + redirect_uri);
-        
-        var code;
-
-        // Listen for the response message containing the user's gists 
-        // that is sent from the LoadGistHandler
-        window.addEventListener('message', function(event) {
-            code = event.data;
-            auth_window.close();
-
-            Jupyter.dialog.modal({
-                title: "All User Gists",
-                body: format_user_gists(code),
-                buttons: {
-                    "OK": {}
-                }
-            });
-
-        })
+                                  "&scope=gist&redirect_uri=" + redirect_uri, "", "width=550, height=500");
     };
+
 
     var format_user_gists = function(responseText) { 
         var body = $('<table/>').attr({class: "table", id: "my_table"});
+        var head = $('<thead/>');
         var header = $('<tr/>').addClass("row list_header");
         header.append("<th>Filename</th>");
         header.append("<th>Description</th>");
         header.append("<th>Last Updated</th>");
         header.append("<th>Open Notebook</th>");
-        body.append(header);
+        head.append(header);
+        body.append(head);
         var row, button, files, last_updated, pretty_date;
         var json_response = JSON.parse(responseText);
         // create flag to check if a notebook has been loaded
@@ -267,6 +266,7 @@ define([
         var url = event.data.url;
         load_from_gist_url(url);
     };
+
 
     var gist_button = function () {
         if (!Jupyter.toolbar) {
