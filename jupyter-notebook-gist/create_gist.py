@@ -176,12 +176,13 @@ class BaseHandler(IPythonHandler):
         self.redirect(gist_url)
 
 
-# This handler will save out the notebook to GitHub gists in either a new Gist
-# or it will create a new revision for a gist that already contains these two
-# files.
-
-
 class GistHandler(BaseHandler):
+    """Handler for saving and editing Gists.
+
+    This handler will save out the notebook to GitHub gists in either a new
+    Gist or it will create a new revision for a gist that already contains
+    these two files.
+    """
 
     def get(self):
 
