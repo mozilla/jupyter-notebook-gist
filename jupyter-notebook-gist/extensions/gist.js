@@ -105,7 +105,6 @@ define([
                             download_nb_on_server(res.files[filename].raw_url, filename, false);
                         }
                     }
-                    console.log("no ipynb files found");
                     console.log(res);
                 } else if (xhr.status == 404) {
                     alert("Gist not found")
@@ -182,6 +181,7 @@ define([
     // that is sent from the LoadGistHandler
     var auth_window;
     window.addEventListener('message', function(event) {
+        if (event.origin != get_base_path()) return;
         auth_window.close();
         Jupyter.dialog.modal({
             title: "All User Gists",

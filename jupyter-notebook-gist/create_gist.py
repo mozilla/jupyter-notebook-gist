@@ -255,7 +255,7 @@ class LoadGistHandler(BaseHandler):
         
         response = requests.get("https://api.github.com/gists", headers=github_headers) 
 
-        self.finish("<script>var gists = '"+response.text+"';window.opener.postMessage(gists, window.location);</script>");
+        self.finish("<script>var gists = '"+response.text+"';window.opener.postMessage(gists, window.opener.location);</script>")
 
 
 def load_jupyter_server_extension(nb_server_app):
