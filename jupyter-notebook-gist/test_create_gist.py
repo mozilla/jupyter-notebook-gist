@@ -52,13 +52,13 @@ class TestError(unittest.TestCase):
 # I cannot instantiate IPythonHandler as they need 2 parameters - application and request.
 # So instead I called them like a static function, passing in None where self is supposed to be...
 class TestBaseHandler(unittest.TestCase):
-	authCodeError = "HTTP 500: Internal Server Error (ERROR: Couldn't extract github authentication code from response)"
+	authCodeError = "HTTP 500: Internal Server Error (ERROR: Couldn't extract GitHub authentication code from response)"
 	notebookPathError = "HTTP 500: Internal Server Error (ERROR: Couldn't extract notebook path from response)"
 	notebookFileNameError = "HTTP 500: Internal Server Error (ERROR: Problem with notebook file name)"
 	notebookExportError = "HTTP 500: Internal Server Error (ERROR: Couldn't export notebook contents)"
-	accessTokenError = "HTTP 500: Internal Server Error (ERROR: Couldn't extract needed info from github access token response)"
+	accessTokenError = "HTTP 500: Internal Server Error (ERROR: Couldn't extract needed info from GitHub access token response)"
 	multipleGistsError = "HTTP 500: Internal Server Error (ERROR: You had multiple gists with the same name as this notebook. Aborting.)"
-	invalidURLError = "HTTP 500: Internal Server Error (ERROR: Couldn't get the url for the gist that was just updated)"
+	invalidURLError = "HTTP 500: Internal Server Error (ERROR: Couldn't get the URL for the gist that was just updated)"
 
 	def _should_throw_error(self, func, args, error):
 
