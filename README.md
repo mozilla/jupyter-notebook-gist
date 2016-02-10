@@ -2,7 +2,7 @@
 
 Create a gist from the Jupyter Notebook UI.
 
-To install, clone/download the project and run `pip install .` from a shell in the project's root directory.
+To install, simply run `pip install jupyter-notebook-gist`. Alternatively, clone/download the project and run `pip install .` from a shell in the project's root directory.
 
 If you have previously installed jupyter-notebook-gist using the old method (which involved manually copying `gist.js` into the
 right directory), clean out the following before installing:
@@ -11,6 +11,8 @@ right directory), clean out the following before installing:
 - `gist.js`, which is located in one of your nbextensions directories
 
 After installing, edit your `jupyter_notebook_config.py` file to specify the github client id and secret:
+
+If your `jupyter_notebook_config.py` file does not exist, you can create one by running `jupyter notebook --generate-config`. You can check the location of this file by running `jupyter --config-dir`.
 
 ```python
 from notebook.services.config import ConfigManager
