@@ -2,7 +2,7 @@
 
 Create a gist from the Jupyter Notebook UI.
 
-To install, simply run `pip install jupter-notebook-gist`. Alternatively, clone/download the project and run `pip install .` from a shell in the project's root directory.
+To install, simply run `pip install jupyter-notebook-gist`. Alternatively, clone/download the project and run `pip install .` from a shell in the project's root directory.
 
 If you have previously installed jupyter-notebook-gist using the old method (which involved manually copying `gist.js` into the
 right directory), clean out the following before installing:
