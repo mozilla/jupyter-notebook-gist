@@ -185,7 +185,7 @@ define([
         auth_window.close();
         Jupyter.dialog.modal({
             title: "All User Gists",
-            body: format_user_gists(event.data),
+            body: format_user_gists(window.atob(event.data)),
             buttons: {
                 "OK": {}
             }

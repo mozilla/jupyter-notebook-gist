@@ -254,8 +254,10 @@ class LoadGistHandler(BaseHandler):
                            "Authorization" : "token " + access_token } 
         
         response = requests.get("https://api.github.com/gists", headers=github_headers) 
-
-        self.finish("<script>var gists = '"+response.text+"';window.opener.postMessage(gists, window.opener.location);</script>")
+        response_to_send = bytearray(response.text, 'utf-8')
+        self.write("<script>var gists = '")
+        self.write(base64.standard_b64encode(response_to_send))
+        self.finish("';window.opener.postMessage(gists, window.opener.location);</script>")
 
 
 def load_jupyter_server_extension(nb_server_app):
