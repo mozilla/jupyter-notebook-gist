@@ -311,6 +311,29 @@ class DownloadNotebookHandler(IPythonHandler):
         self.flush()
 
 
+class LoadGistHandler(BaseHandler):
+
+    def get(self):
+
+        # Extract access code
+        access_code = self.extract_code_from_args(self.request.arguments)
+
+        # Request access token from github
+        access_token = self.request_access_token(access_code)
+
+        github_headers = {"Accept": "application/json",
+                          "Authorization": "token " + access_token}
+
+        response = requests.get("https://api.github.com/gists",
+                                headers=github_headers)
+        response_to_send = bytearray(response.text, 'utf-8')
+        self.write("<script>var gists = '")
+        self.write(base64.standard_b64encode(response_to_send))
+        self.write("';")
+        self.write("window.opener.postMessage(gists, window.opener.location)")
+        self.finish(";</script>")
+
+
 def load_jupyter_server_extension(nb_server_app):
 
     # Extract our gist client details from the config:
@@ -320,13 +343,21 @@ def load_jupyter_server_extension(nb_server_app):
 
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
+
     route_pattern = url_path_join(web_app.settings['base_url'], '/create_gist')
+
     download_notebook_route_pattern = url_path_join(
                                         web_app.settings['base_url'],
                                         '/download_notebook')
+
+    load_user_gists_route_pattern = url_path_join(
+                                        web_app.settings['base_url'],
+                                        'load_user_gists')
 
     web_app.add_handlers(host_pattern,
                          [(route_pattern,
                            GistHandler),
                           (download_notebook_route_pattern,
-                           DownloadNotebookHandler)])
+                           DownloadNotebookHandler),
+                          (load_user_gists_route_pattern,
+                           LoadGistHandler)])
