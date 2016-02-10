@@ -150,7 +150,7 @@ class BaseHandler(IPythonHandler):
         github_headers = {"Accept": "application/json",
                           "Authorization": "token " + access_token}
 
-        response = requests.get(api_root + "/gists",
+        response = requests.get(BaseHandler.api_root + "/gists",
                                 headers=github_headers)
         gist_args = json.loads(response.text)
 
@@ -183,7 +183,7 @@ class BaseHandler(IPythonHandler):
         github_headers = {"Accept": "application/json",
                           "Authorization": "token " + access_token}
 
-        gist_response = requests.post(api_root + "/gists",
+        gist_response = requests.post(BaseHandler.api_root + "/gists",
                                       data=json.dumps(gist_contents),
                                       headers=github_headers)
 
@@ -194,7 +194,7 @@ class BaseHandler(IPythonHandler):
         github_headers = {"Accept": "application/json",
                           "Authorization": "token " + access_token}
 
-        gist_response = requests.patch(api_root + "/gists/" + gist_id,
+        gist_response = requests.patch(BaseHandler.api_root + "/gists/" + gist_id,
                                        data=json.dumps(gist_contents),
                                        headers=github_headers)
 
