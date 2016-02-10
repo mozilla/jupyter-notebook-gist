@@ -29,15 +29,27 @@ class BaseHandler(IPythonHandler):
     # Extracts the access code from the arguments dictionary (given back
     # from github)
     def extract_code_from_args(self, args):
+
+        if args is None:
+            raise_error("Couldn't extract GitHub authentication code "
+                        "from response")
+
+        # TODO: Is there a case where the length of the error will be < 0?
         error = args.get("error_description", None)
         if error is not None:
             if (len(error) >= 0):
                 raise_github_error(error)
+            else:
+                raise_error("Something went wrong")
 
         access_code = args.get("code", None)
-        if access_code is None or len(access_code) <= 0:
-            raise_error("Couldn't extract GitHub authentication code from "
-                        "response"),
+
+        # access_code is supposed to be a list with 1 thing in it
+        if not isinstance(access_code, list) or access_code[0] is None or \
+           len(access_code) != 1 or len(access_code[0]) <= 0:
+
+                raise_error("Couldn't extract GitHub authentication code from "
+                            "response"),
 
         # If we get here, everything was good - no errors
         access_code = access_code[0].decode('ascii')
@@ -46,17 +58,25 @@ class BaseHandler(IPythonHandler):
     # Extracts the notebook path from the arguments dictionary (given back
     # from github)
     def extract_notebook_path_from_args(self, args):
+
+        if args is None:
+            raise_error("Couldn't extract notebook path from response")
+
         error = args.get("error_description", None)
         if error is not None:
             if (len(error) >= 0):
                 raise_github_error(error)
 
         path_bytes = args.get("nb_path", None)
-        if path_bytes is None or len(path_bytes) <= 0:
-            raise_error("Couldn't extract notebook path from response")
+        # path_bytes is supposed to be a list with 1 thing in it
+        if not isinstance(path_bytes, list) or path_bytes[0] \
+           is None or len(path_bytes) != 1 or len(path_bytes[0]) <= 0:
+
+                raise_error("Couldn't extract notebook path from response")
 
         # If we get here, everything was good - no errors
         nb_path = base64.b64decode(path_bytes[0]).decode('utf-8').lstrip("/")
+
         return nb_path
 
     def request_access_token(self, access_code):
@@ -74,6 +94,10 @@ class BaseHandler(IPythonHandler):
 
         token_args = json.loads(token_response.text)
 
+        return self._request_access_token(token_args)
+
+    def _request_access_token(self, token_args):
+
         token_error = token_args.get("error_description", None)
         if token_error is not None:
             raise_github_error(token_error)
@@ -84,16 +108,21 @@ class BaseHandler(IPythonHandler):
         scope = token_args.get("scope", None)
         if access_token is None or token_type is None or scope is None:
             raise_error("Couldn't extract needed info from GitHub access"
-                        "token response")
+                        " token response")
 
         # If we get here everything is good
         return access_token  # do not care about scope or token_type
 
     def get_notebook_filename(self, nb_path):
 
+        if not isinstance(nb_path, str) or len(nb_path) == 0:
+            raise_error("Problem with notebook file name")
+
         # Extract file names given path to notebook
         filename = os.path.basename(nb_path)
         ext_start_ind = filename.rfind(".")
+
+        # TODO: is it possible to have a notebook without an extension?
         if ext_start_ind == -1:
             filename_no_ext = filename
         else:
@@ -103,9 +132,15 @@ class BaseHandler(IPythonHandler):
 
     def get_notebook_contents(self, nb_path):
 
+        if not isinstance(nb_path, str) or len(nb_path) == 0:
+            raise_error("Couldn't export notebook contents")
+
         # Extract file contents given the path to the notebook
-        notebook_output, _ = export_by_name("notebook", nb_path)
-        python_output, _ = export_by_name("python", nb_path)
+        try:
+            notebook_output, _ = export_by_name("notebook", nb_path)
+            python_output, _ = export_by_name("python", nb_path)
+        except FileNotFoundError as e:
+            raise_error("Couldn't export notebook contents")
 
         return (notebook_output, python_output)
 
@@ -117,11 +152,16 @@ class BaseHandler(IPythonHandler):
 
         response = requests.get(api_root + "/gists",
                                 headers=github_headers)
-        get_gists_args = json.loads(response.text)
+        gist_args = json.loads(response.text)
+
+        return self._find_existing_gist_by_name(gist_args,
+                                                nb_filename, py_filename)
+
+    def _find_existing_gist_by_name(self, gist_args, nb_filename, py_filename):
 
         match_counter = 0
         matchID = None
-        for gist in get_gists_args:
+        for gist in gist_args:
             gist_files = gist.get("files", None)
             if (gist_files is not None and nb_filename in gist_files and
                     py_filename in gist_files):
@@ -163,6 +203,18 @@ class BaseHandler(IPythonHandler):
     def verify_gist_response(self, gist_response):
 
         gist_response_json = gist_response.json()
+
+        gist_url = self._verify_gist_response(gist_response_json)
+
+        # If we return without erroring we are good
+        self.redirect(gist_url)
+
+    def _verify_gist_response(self, gist_response_json):
+
+        if gist_response_json is None:
+            raise_error("Couldn't get the URL for the gist that was just"
+                        " updated")
+
         update_gist_error = gist_response_json.get("error_description", None)
         if update_gist_error is not None:
             raise_github_error(update_gist_error)
@@ -172,8 +224,7 @@ class BaseHandler(IPythonHandler):
             raise_error("Couldn't get the URL for the gist that was just "
                         "updated")
 
-        # If we return without erroring we are good
-        self.redirect(gist_url)
+        return gist_url
 
 
 class GistHandler(BaseHandler):
