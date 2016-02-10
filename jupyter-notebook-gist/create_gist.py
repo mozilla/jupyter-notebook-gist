@@ -311,8 +311,8 @@ class DownloadNotebookHandler(IPythonHandler):
         self.flush()
 
 
-class LoadGistHandler(BaseHandler):  
-    
+class LoadGistHandler(BaseHandler):
+
     def get(self):
 
         # Extract access code
@@ -321,14 +321,17 @@ class LoadGistHandler(BaseHandler):
         # Request access token from github
         access_token = self.request_access_token(access_code)
 
-        github_headers = { "Accept" : "application/json",
-                           "Authorization" : "token " + access_token } 
-        
-        response = requests.get("https://api.github.com/gists", headers=github_headers) 
+        github_headers = {"Accept": "application/json",
+                          "Authorization": "token " + access_token}
+
+        response = requests.get("https://api.github.com/gists",
+                                headers=github_headers)
         response_to_send = bytearray(response.text, 'utf-8')
         self.write("<script>var gists = '")
         self.write(base64.standard_b64encode(response_to_send))
-        self.finish("';window.opener.postMessage(gists, window.opener.location);</script>")
+        self.write("';")
+        self.write("window.opener.postMessage(gists, window.opener.location)")
+        self.finish(";</script>")
 
 
 def load_jupyter_server_extension(nb_server_app):
@@ -357,5 +360,4 @@ def load_jupyter_server_extension(nb_server_app):
                           (download_notebook_route_pattern,
                            DownloadNotebookHandler),
                           (load_user_gists_route_pattern,
-                            LoadGistHandler)])
-
+                           LoadGistHandler)])
