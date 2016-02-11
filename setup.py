@@ -37,6 +37,6 @@ setup(
     packages=["jupyter-notebook-gist"],
     package_data={'': ['extensions/gist.js']},
     install_requires = ["ipython >= 4", "jupyter-pip", "jupyter", "requests"],
-    url="https://github.com/mreid-moz/jupyter-notebook-gist",
+    url="https://github.com/mozilla/jupyter-notebook-gist",
     cmdclass = {"install": InstallCommand}
 )
