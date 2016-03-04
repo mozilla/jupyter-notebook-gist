@@ -4,12 +4,6 @@ Create a gist from the Jupyter Notebook UI.
 
 To install, simply run `pip install jupyter-notebook-gist`. Alternatively, clone/download the project and run `pip install .` from a shell in the project's root directory.
 
-If you have previously installed jupyter-notebook-gist using the old method (which involved manually copying `gist.js` into the
-right directory), clean out the following before installing:
-
-- Any jupyter-notebook-gist data in `jupyter_notebook_config.py` (if the file exists) that is not in the config code below
-- `gist.js`, which is located in one of your nbextensions directories
-
 After installing, edit your `jupyter_notebook_config.py` file to specify the github client id and secret:
 
 If your `jupyter_notebook_config.py` file does not exist, you can create one by running `jupyter notebook --generate-config`. You can check the location of this file by running `jupyter --config-dir`.
@@ -28,5 +22,9 @@ Replace the vars above with a working client_id / secret. You can create one
 
 Then run `jupyter notebook` from the repo root.
 
-For developers, you can uninstall the extension by deleting the jupyter-notebook-gist directory and `.egg-info` file from your
-Python installation's `site-packages` folder.
+NOTE: Uninstalling jupyter-spark via `pip uninstall jupyter-spark` will uninstall the server extension but leave the client extension in a partially installed state. To fully remove the extension:
+
+1. Run `pip uninstall jupyter-spark`
+2. Delete `spark.js` from your `nbextensions` folder.
+3. Delete any references to `jupyter-spark.spark` in `jupyter_notebook_config.json` (in your .jupyter directory)
+4. Delete any references to `spark` in `notebook.json` (in .jupyter/nbconfig)

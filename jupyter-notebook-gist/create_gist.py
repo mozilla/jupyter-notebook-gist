@@ -234,8 +234,10 @@ def helper_request_access_token(token_args):
 
 def get_notebook_filename(nb_path):
 
-    if not isinstance(nb_path, str) or len(nb_path) == 0:
-        raise_error("Problem with notebook file name")
+    if not (isinstance(nb_path, str) or (bytes is str and
+            isinstance(nb_path, unicode))) or len(nb_path) == 0:
+
+                raise_error("Problem with notebook file name")
 
     # Extract file names given path to notebook
     filename = os.path.basename(nb_path)
@@ -252,8 +254,10 @@ def get_notebook_filename(nb_path):
 
 def get_notebook_contents(nb_path):
 
-    if not isinstance(nb_path, str) or len(nb_path) == 0:
-        raise_error("Couldn't export notebook contents")
+    if not (isinstance(nb_path, str) or (bytes is str and
+            isinstance(nb_path, unicode))) or len(nb_path) == 0:
+
+                raise_error("Couldn't export notebook contents")
 
     # Extract file contents given the path to the notebook
     try:
