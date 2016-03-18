@@ -1,11 +1,6 @@
 language: python
 python:
   - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.5-dev" # 3.5 development branch
-  - "nightly" # currently points to 3.6-dev
 # dependencies
 install:
   - pip install jupyter
@@ -14,4 +9,4 @@ install:
   - pip install requests
   - pip install notebook
 # command to run tests
-script: cd jupyter-notebook-gist && nosetests test_create_gist.py
+script: python -m unittest discover

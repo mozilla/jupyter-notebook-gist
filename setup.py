@@ -32,7 +32,7 @@ class InstallCommand(install):
 
 setup(
     name="jupyter-notebook-gist",
-    version="0.3.0",
+    version="0.3.1",
     description="Create a gist from the Jupyter Notebook UI",
     packages=["jupyter-notebook-gist"],
     package_data={'': ['extensions/gist.js']},
