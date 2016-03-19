@@ -4,7 +4,7 @@ import io
 import os
 from nbformat import write
 from nbformat.v4 import (new_notebook, new_markdown_cell)
-from create_gist import *
+from .create_gist import *
 
 
 class TestError(unittest.TestCase):
