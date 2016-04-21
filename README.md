@@ -26,5 +26,5 @@ NOTE: Uninstalling jupyter-notebook-gist via `pip uninstall jupyter-notebook-gis
 
 1. Run `pip uninstall jupyter-notebook-gist`
 2. Delete `gist.js` from your `nbextensions` folder.
-3. Delete any references to `jupyter-notebook-gist.spark` in `jupyter_notebook_config.json` (in your .jupyter directory)
+3. Delete any references to `jupyter-notebook-gist.create_gist` in `jupyter_notebook_config.json` (in your .jupyter directory)
 4. Delete any references to `gist` in `notebook.json` (in .jupyter/nbconfig)
