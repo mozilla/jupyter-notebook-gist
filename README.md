@@ -18,7 +18,7 @@ cm.update('notebook', {"oauth_client_id": c.NotebookApp.oauth_client_id})
 ```
 
 Replace the vars above with a working client_id / secret. You can create one
-[here](https://github.com/settings/applications).
+[here](https://github.com/settings/applications). Here's an [example of an OAuth application](https://cloud.githubusercontent.com/assets/969479/14916551/add90efc-0df0-11e6-8cfb-277754a48b66.png) created by @mreid-moz for testing.
 
 Then run `jupyter notebook` from the repo root.
 
