@@ -2,6 +2,7 @@ from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 from nbconvert.exporters.export import *
 from tornado.web import HTTPError
+import jupyter_core
 import base64
 import json
 import requests
@@ -348,10 +349,23 @@ def verify_gist_response(gist_response_json):
 
 def load_jupyter_server_extension(nb_server_app):
 
-    # Extract our gist client details from the config:
-    cfg = nb_server_app.config["NotebookApp"]
-    BaseHandler.client_id = cfg["oauth_client_id"]
-    BaseHandler.client_secret = cfg["oauth_client_secret"]
+    # Extract our gist client details from the file:
+    gist_info_path = url_path_join(jupyter_core.paths.jupyter_config_dir(),
+                                   '/gist_info.txt')
+
+    try:
+        oauth_info = open(gist_info_path, 'r')
+
+        BaseHandler.client_id = oauth_info.readline().strip()
+        BaseHandler.client_secret = oauth_info.readline().strip()
+
+        oauth_info.close()
+
+    except OSError as e:
+        # Create the file
+        oauth_info = open(gist_info_path, 'w')
+        oauth_info.write('Client Id Here\nClient Secret Here')
+        oauth_info.close()
 
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
