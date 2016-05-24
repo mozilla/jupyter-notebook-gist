@@ -358,7 +358,7 @@ def load_jupyter_server_extension(nb_server_app):
     Config = configParser.ConfigParser()
 
     gist_info_path = url_path_join(jupyter_core.paths.jupyter_config_dir(),
-                                   '/gist_info.txt')
+                                   '/gist_info.ini')
     try:
         Config.read(gist_info_path)
         BaseHandler.client_id = Config.get('JupyterNotebookGist', 'client_id')
