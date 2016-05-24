@@ -11,9 +11,9 @@ import os
 import logging
 
 try:
-    import ConfigParser as configParser #python 2
+    import ConfigParser as configParser  # python 2
 except:
-    import configparser as configParser #python 3 
+    import configparser as configParser  # python 3
 
 # Example usage: tornado_logger.error("This is an error!")
 tornado_logger = logging.getLogger("tornado.application")
@@ -356,28 +356,31 @@ def load_jupyter_server_extension(nb_server_app):
 
     # Extract our gist client details from the config:
     Config = configParser.ConfigParser()
-    
+
     gist_info_path = url_path_join(jupyter_core.paths.jupyter_config_dir(),
                                    '/gist_info.txt')
     try:
         Config.read(gist_info_path)
         BaseHandler.client_id = Config.get('JupyterNotebookGist', 'client_id')
-        BaseHandler.client_secret = Config.get('JupyterNotebookGist', 'client_secret')
+        BaseHandler.client_secret = Config.get('JupyterNotebookGist',
+                                               'client_secret')
 
-    except configParser.Error as e: # File is invalid or not found
-        nb_server_app.log.error("Error: Invalid Jupyter Notebook Gist config file!")
+    except configParser.Error as e:  # File is invalid or not found
+        nb_server_app.log.error("Error: Invalid Jupyter Notebook Gist "
+                                "config file!")
 
         # Create the file
         oauth_info = open(gist_info_path, 'w')
         Config.add_section('JupyterNotebookGist')
-        Config.set('JupyterNotebookGist','client_id', 'MyClientId')
-        Config.set('JupyterNotebookGist','client_secret', 'MyClientSecret')
+        Config.set('JupyterNotebookGist', 'client_id', 'MyClientId')
+        Config.set('JupyterNotebookGist', 'client_secret', 'MyClientSecret')
         Config.write(oauth_info)
         oauth_info.close()
 
-    else: # No error
+    else:  # No error
 
-        nb_server_app.log.info("Jupyter Notebook Gist extension loaded successfully.")
+        nb_server_app.log.info("Jupyter Notebook Gist extension "
+                               "loaded successfully.")
 
     web_app = nb_server_app.web_app
     host_pattern = '.*$'
