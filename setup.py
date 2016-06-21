@@ -2,7 +2,7 @@ import os
 from setuptools import setup
 from setuptools.command.install import install
 
-EXT_DIR = os.path.join(os.path.dirname(__file__), 'jupyter-notebook-gist')
+EXT_DIR = os.path.join(os.path.dirname(__file__), 'jupyter_notebook_gist')
 
 class InstallCommand(install):
     def run(self):
@@ -26,15 +26,15 @@ class InstallCommand(install):
         server_cm = ConfigManager(config_dir=jupyter_config_dir())
         cfg = server_cm.get('jupyter_notebook_config')
         server_extensions = cfg.setdefault('NotebookApp', {}).setdefault('server_extensions', [])
-        if "jupyter-notebook-gist.create_gist" not in server_extensions:
-            cfg['NotebookApp']['server_extensions'] += ['jupyter-notebook-gist.create_gist']
+        if "jupyter_notebook_gist.create_gist" not in server_extensions:
+            cfg['NotebookApp']['server_extensions'] += ['jupyter_notebook_gist.create_gist']
             server_cm.update('jupyter_notebook_config', cfg)
 
 setup(
     name="jupyter-notebook-gist",
     version="0.3.1",
     description="Create a gist from the Jupyter Notebook UI",
-    packages=["jupyter-notebook-gist"],
+    packages=["jupyter_notebook_gist"],
     package_data={'': ['extensions/gist.js']},
     install_requires = ["ipython >= 4", "jupyter-pip", "jupyter", "requests"],
     url="https://github.com/mozilla/jupyter-notebook-gist",
