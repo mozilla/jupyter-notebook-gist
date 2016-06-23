@@ -1,16 +1,14 @@
-from notebook.utils import url_path_join
-from notebook.base.handlers import IPythonHandler
-from nbconvert.exporters.export import *
-from tornado.web import HTTPError
 import base64
 import json
+import os
+
 import requests
 import tornado
-import os
-import logging
+from nbconvert.exporters.export import export_by_name
+from notebook.base.handlers import IPythonHandler
+from tornado.web import HTTPError
 
-# Example usage: tornado_logger.error("This is an error!")
-tornado_logger = logging.getLogger("tornado.application")
+GITHUB_API_ROOT = "https://api.github.com"
 
 
 def raise_error(msg):
@@ -22,9 +20,24 @@ def raise_github_error(msg):
 
 
 class BaseHandler(IPythonHandler):
-    api_root = "https://api.github.com"
-    client_id = None
-    client_secret = None
+
+    def initialize(self, client_id, client_secret):
+        self.client_id = client_id
+        self.client_secret = client_secret
+
+    def request_access_token(self, access_code):
+        "Request access token from GitHub"
+        token_response = requests.post(
+            "https://github.com/login/oauth/access_token",
+            data={
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "code": access_code
+            },
+            headers={"Accept": "application/json"},
+        )
+        token_args = json.loads(token_response.text)
+        return helper_request_access_token(token_args)
 
 
 class GistHandler(BaseHandler):
@@ -34,17 +47,13 @@ class GistHandler(BaseHandler):
     Gist or it will create a new revision for a gist that already contains
     these two files.
     """
-
     def get(self):
 
         # Extract access code
         access_code = extract_code_from_args(self.request.arguments)
 
         # Request access token from github
-        access_token = request_access_token(access_code)
-
-        github_headers = {"Accept": "application/json",
-                          "Authorization": "token " + access_token}
+        access_token = self.request_access_token(access_code)
 
         # Extract notebook path
         nb_path = extract_notebook_path_from_args(self.request.arguments)
@@ -68,12 +77,12 @@ class GistHandler(BaseHandler):
         }
 
         # Get the authenticated user's matching gist (if available)
-        matchID = find_existing_gist_by_name(filename,
-                                             filename_with_py,
-                                             access_token)
+        match_id = find_existing_gist_by_name(filename,
+                                              filename_with_py,
+                                              access_token)
 
         # If no gist with this name exists yet, create a new gist
-        if matchID is None:
+        if match_id is None:
             gist_response = create_new_gist(gist_contents, access_token)
 
         # If we have another gist with the same files, create a new revision
@@ -82,7 +91,7 @@ class GistHandler(BaseHandler):
         # This else catches the case where there is exactly 1 match
         else:
             gist_response = edit_existing_gist(gist_contents,
-                                               matchID,
+                                               match_id,
                                                access_token)
 
         gist_response_json = gist_response.json()
@@ -98,9 +107,9 @@ class DownloadNotebookHandler(IPythonHandler):
         # url and filename are sent in a JSON encoded blob
         post_data = tornado.escape.json_decode(self.request.body)
 
-        nb_url = post_data["nb_url"]
-        nb_name = base64.b64decode(post_data["nb_name"]).decode('utf-8')
-        force_download = post_data["force_download"]
+        nb_url = post_data['nb_url']
+        nb_name = base64.b64decode(post_data['nb_name']).decode('utf-8')
+        force_download = post_data['force_download']
 
         file_path = os.path.join(os.getcwd(), nb_name)
 
@@ -126,7 +135,7 @@ class LoadGistHandler(BaseHandler):
         access_code = extract_code_from_args(self.request.arguments)
 
         # Request access token from github
-        access_token = request_access_token(access_code)
+        access_token = self.request_access_token(access_code)
 
         github_headers = {"Accept": "application/json",
                           "Authorization": "token " + access_token}
@@ -141,10 +150,11 @@ class LoadGistHandler(BaseHandler):
         self.finish(";</script>")
 
 
-# Extracts the access code from the arguments dictionary (given back
-# from github)
 def extract_code_from_args(args):
-
+    """
+    Extracts the access code from the arguments dictionary (given back
+    from github)
+    """
     if args is None:
         raise_error("Couldn't extract GitHub authentication code "
                     "from response")
@@ -152,7 +162,7 @@ def extract_code_from_args(args):
     # TODO: Is there a case where the length of the error will be < 0?
     error = args.get("error_description", None)
     if error is not None:
-        if (len(error) >= 0):
+        if len(error) >= 0:
             raise_github_error(error)
         else:
             raise_error("Something went wrong")
@@ -161,10 +171,10 @@ def extract_code_from_args(args):
 
     # access_code is supposed to be a list with 1 thing in it
     if not isinstance(access_code, list) or access_code[0] is None or \
-       len(access_code) != 1 or len(access_code[0]) <= 0:
+            len(access_code) != 1 or len(access_code[0]) <= 0:
 
-            raise_error("Couldn't extract GitHub authentication code from "
-                        "response"),
+        raise_error("Couldn't extract GitHub authentication code from "
+                    "response")
 
     # If we get here, everything was good - no errors
     access_code = access_code[0].decode('ascii')
@@ -180,7 +190,7 @@ def extract_notebook_path_from_args(args):
 
     error = args.get("error_description", None)
     if error is not None:
-        if (len(error) >= 0):
+        if len(error) >= 0:
             raise_github_error(error)
 
     path_bytes = args.get("nb_path", None)
@@ -196,26 +206,7 @@ def extract_notebook_path_from_args(args):
     return nb_path
 
 
-def request_access_token(access_code):
-
-    # Request access token from github
-    token_response = requests.post(
-                       "https://github.com/login/oauth/"
-                       "access_token",
-                       data={
-                        "client_id": BaseHandler.client_id,
-                        "client_secret": BaseHandler.client_secret,
-                        "code": access_code
-                       },
-                       headers={"Accept": "application/json"})
-
-    token_args = json.loads(token_response.text)
-
-    return helper_request_access_token(token_args)
-
-
 def helper_request_access_token(token_args):
-
     token_error = token_args.get("error_description", None)
     if token_error is not None:
         raise_github_error(token_error)
@@ -225,8 +216,8 @@ def helper_request_access_token(token_args):
     token_type = token_args.get("token_type", None)
     scope = token_args.get("scope", None)
     if access_token is None or token_type is None or scope is None:
-        raise_error("Couldn't extract needed info from GitHub access"
-                    " token response")
+        raise_error("Couldn't extract needed info from GitHub access "
+                    "token response")
 
     # If we get here everything is good
     return access_token  # do not care about scope or token_type
@@ -236,8 +227,7 @@ def get_notebook_filename(nb_path):
 
     if not (isinstance(nb_path, str) or (bytes is str and
             isinstance(nb_path, unicode))) or len(nb_path) == 0:
-
-                raise_error("Problem with notebook file name")
+        raise_error("Problem with notebook file name")
 
     # Extract file names given path to notebook
     filename = os.path.basename(nb_path)
@@ -256,44 +246,39 @@ def get_notebook_contents(nb_path):
 
     if not (isinstance(nb_path, str) or (bytes is str and
             isinstance(nb_path, unicode))) or len(nb_path) == 0:
-
-                raise_error("Couldn't export notebook contents")
+        raise_error("Couldn't export notebook contents")
 
     # Extract file contents given the path to the notebook
     try:
         notebook_output, _ = export_by_name("notebook", nb_path)
         python_output, _ = export_by_name("python", nb_path)
-    except OSError as e:  # python 2 does not support FileNotFoundError
+    except OSError:  # python 2 does not support FileNotFoundError
         raise_error("Couldn't export notebook contents")
 
     return (notebook_output, python_output)
 
 
-def find_existing_gist_by_name(nb_filename, py_filename,
-                               access_token):
-
+def find_existing_gist_by_name(nb_filename, py_filename, access_token):
     github_headers = {"Accept": "application/json",
                       "Authorization": "token " + access_token}
 
-    response = requests.get(BaseHandler.api_root + "/gists",
-                            headers=github_headers)
+    response = requests.get(GITHUB_API_ROOT + "/gists", headers=github_headers)
     gist_args = json.loads(response.text)
 
-    return helper_find_existing_gist_by_name(gist_args,
-                                             nb_filename, py_filename)
+    return helper_find_existing_gist_by_name(gist_args, nb_filename,
+                                             py_filename)
 
 
 def helper_find_existing_gist_by_name(gist_args, nb_filename, py_filename):
-
     match_counter = 0
-    matchID = None
+    match_id = None
     for gist in gist_args:
         gist_files = gist.get("files", None)
         if (gist_files is not None and nb_filename in gist_files and
                 py_filename in gist_files):
             match_counter += 1
             if "id" in gist:
-                matchID = gist["id"]
+                match_id = gist["id"]
 
     # TODO: This probably shouldn't actually be an error
     # Instead, we should ask the user which gist they meant?
@@ -302,7 +287,7 @@ def helper_find_existing_gist_by_name(gist_args, nb_filename, py_filename):
                     "notebook. Aborting.")
 
     # If we are here we have either 0 or 1 gists that match.
-    return matchID
+    return match_id
 
 
 def create_new_gist(gist_contents, access_token):
@@ -310,7 +295,7 @@ def create_new_gist(gist_contents, access_token):
     github_headers = {"Accept": "application/json",
                       "Authorization": "token " + access_token}
 
-    gist_response = requests.post(BaseHandler.api_root + "/gists",
+    gist_response = requests.post(GITHUB_API_ROOT + "/gists",
                                   data=json.dumps(gist_contents),
                                   headers=github_headers)
 
@@ -318,23 +303,19 @@ def create_new_gist(gist_contents, access_token):
 
 
 def edit_existing_gist(gist_contents, gist_id, access_token):
-
     github_headers = {"Accept": "application/json",
                       "Authorization": "token " + access_token}
 
-    gist_response = requests.patch(BaseHandler.api_root + "/gists/" +
-                                   gist_id,
+    gist_response = requests.patch(GITHUB_API_ROOT + "/gists/" + gist_id,
                                    data=json.dumps(gist_contents),
                                    headers=github_headers)
-
     return gist_response
 
 
 def verify_gist_response(gist_response_json):
 
     if gist_response_json is None:
-        raise_error("Couldn't get the URL for the gist that was just"
-                    " updated")
+        raise_error("Couldn't get the URL for the gist that was just updated")
 
     update_gist_error = gist_response_json.get("error_description", None)
     if update_gist_error is not None:
@@ -342,34 +323,4 @@ def verify_gist_response(gist_response_json):
 
     gist_url = gist_response_json.get("html_url", None)
     if gist_url is None:
-        raise_error("Couldn't get the URL for the gist that was just "
-                    "updated")
-
-
-def load_jupyter_server_extension(nb_server_app):
-
-    # Extract our gist client details from the config:
-    cfg = nb_server_app.config["NotebookApp"]
-    BaseHandler.client_id = cfg["oauth_client_id"]
-    BaseHandler.client_secret = cfg["oauth_client_secret"]
-
-    web_app = nb_server_app.web_app
-    host_pattern = '.*$'
-
-    route_pattern = url_path_join(web_app.settings['base_url'], '/create_gist')
-
-    download_notebook_route_pattern = url_path_join(
-                                        web_app.settings['base_url'],
-                                        '/download_notebook')
-
-    load_user_gists_route_pattern = url_path_join(
-                                        web_app.settings['base_url'],
-                                        'load_user_gists')
-
-    web_app.add_handlers(host_pattern,
-                         [(route_pattern,
-                           GistHandler),
-                          (download_notebook_route_pattern,
-                           DownloadNotebookHandler),
-                          (load_user_gists_route_pattern,
-                           LoadGistHandler)])
+        raise_error("Couldn't get the URL for the gist that was just updated")

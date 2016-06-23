@@ -1,17 +1,18 @@
 language: python
-python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.5-dev" # 3.5 development branch
-  - "nightly" # currently points to 3.6-dev
-# dependencies
+python: 3.5
+sudo: false
+cache:
+  directories:
+  - "~/.cache/pip"
+env:
+  - TOXENV=py27
+  - TOXENV=py33
+  - TOXENV=py34
+  - TOXENV=py35
+  - TOXENV=pypy
 install:
-  - pip install jupyter
-  - pip install ipython
-  - pip install traitlets
-  - pip install requests
-  - pip install notebook
-# command to run tests
-script: python -m unittest discover
+  - pip install tox codecov
+script:
+  - tox -v
+after_success:
+  - codecov

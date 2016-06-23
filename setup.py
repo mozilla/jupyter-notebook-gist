@@ -1,42 +1,37 @@
-import os
-from setuptools import setup
-from setuptools.command.install import install
+import sys
+from setuptools import find_packages, setup
 
-EXT_DIR = os.path.join(os.path.dirname(__file__), 'jupyter_notebook_gist')
+tests_require = [
+    'coverage>=4.0',
+    'pytest-isort',
+    'pytest-cache>=1.0',
+    'pytest-flake8>=0.5',
+    'pytest>=2.8.0',
+    'pytest-wholenodeid',
+]
 
-class InstallCommand(install):
-    def run(self):
-        # Import inside run() so if the user doesn't have jupyter notebook yet, we grab that dependency,
-        # then run this code which imports it.
-        from notebook.nbextensions import install_nbextension
-        from notebook.services.config import ConfigManager
-        from jupyter_core.paths import jupyter_config_dir
+needs_pytest = set(['pytest', 'test', 'ptr']).intersection(sys.argv)
+pytest_runner = ['pytest-runner'] if needs_pytest else []
 
-        # Install Python package
-        install.run(self)
-
-        # Install JavaScript extension
-        install_nbextension(os.path.join(EXT_DIR, "extensions", "gist.js"), overwrite=True, user=True)
-
-        # Activate the JS extensions on the notebook
-        js_cm = ConfigManager()
-        js_cm.update('notebook', {"load_extensions": {'gist': True}})
-
-        # Activate the Python server extension
-        server_cm = ConfigManager(config_dir=jupyter_config_dir())
-        cfg = server_cm.get('jupyter_notebook_config')
-        server_extensions = cfg.setdefault('NotebookApp', {}).setdefault('server_extensions', [])
-        if "jupyter_notebook_gist.create_gist" not in server_extensions:
-            cfg['NotebookApp']['server_extensions'] += ['jupyter_notebook_gist.create_gist']
-            server_cm.update('jupyter_notebook_config', cfg)
 
 setup(
-    name="jupyter-notebook-gist",
-    version="0.3.1",
-    description="Create a gist from the Jupyter Notebook UI",
-    packages=["jupyter_notebook_gist"],
-    package_data={'': ['extensions/gist.js']},
-    install_requires = ["ipython >= 4", "jupyter-pip", "jupyter", "requests"],
-    url="https://github.com/mozilla/jupyter-notebook-gist",
-    cmdclass = {"install": InstallCommand}
+    name='jupyter-notebook-gist',
+    version='0.4a1',
+    description='Create a gist from the Jupyter Notebook UI',
+    author='Mozilla Telemetry',
+    author_email='telemetry@lists.mozilla.org',
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
+    include_package_data=True,
+    license='MPL2',
+    install_requires=[
+        'ipython >= 4',
+        'jupyter',
+        'requests',
+        'widgetsnbextension',
+    ],
+    setup_requires=[] + pytest_runner,
+    tests_require=tests_require,
+    url='https://github.com/mozilla/jupyter-notebook-gist',
+    zip_safe=False,
 )
