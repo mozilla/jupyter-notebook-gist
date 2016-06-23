@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import sys
 
 import requests
 import tornado
@@ -9,6 +10,13 @@ from notebook.base.handlers import IPythonHandler
 from tornado.web import HTTPError
 
 GITHUB_API_ROOT = "https://api.github.com"
+
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    string_types = (str,)
+else:
+    string_types = (basestring,)  # noqa
 
 
 def raise_error(msg):
@@ -224,9 +232,7 @@ def helper_request_access_token(token_args):
 
 
 def get_notebook_filename(nb_path):
-
-    if not (isinstance(nb_path, str) or (bytes is str and
-            isinstance(nb_path, unicode))) or len(nb_path) == 0:
+    if not isinstance(nb_path, string_types) or len(nb_path) == 0:
         raise_error("Problem with notebook file name")
 
     # Extract file names given path to notebook
@@ -243,9 +249,7 @@ def get_notebook_filename(nb_path):
 
 
 def get_notebook_contents(nb_path):
-
-    if not (isinstance(nb_path, str) or (bytes is str and
-            isinstance(nb_path, unicode))) or len(nb_path) == 0:
+    if not isinstance(nb_path, string_types) or len(nb_path) == 0:
         raise_error("Couldn't export notebook contents")
 
     # Extract file contents given the path to the notebook
