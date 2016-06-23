@@ -32,9 +32,10 @@ function is_url_valid(url) {
 }
 
 define([
+    'base/js/namespace',
     'base/js/utils',
     'moment'
-], function (utils, moment) {
+], function (Jupyter, utils, moment) {
     var github_redirect_uri = get_base_path() + "/create_gist";
     var gist_notebook = function () {
         // Save the notebook and create a checkpoint to ensure that we create
