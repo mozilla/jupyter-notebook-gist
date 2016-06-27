@@ -26,6 +26,7 @@ setup(
     license='MPL2',
     install_requires=[
         'ipython >= 4',
+        'notebook >= 4.2',
         'jupyter',
         'requests',
         'widgetsnbextension',
