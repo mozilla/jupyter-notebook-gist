@@ -5,6 +5,7 @@ tests_require = [
     'coverage>=4.0',
     'pytest-isort',
     'pytest-cache>=1.0',
+    'flake8<3.0.0',
     'pytest-flake8>=0.5',
     'pytest>=2.8.0',
     'pytest-wholenodeid',
