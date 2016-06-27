@@ -1,20 +1,10 @@
 /*
-Add this file to $(jupyter --data-dir)/nbextensions/gist.js
-And load it with:
+Run to enable this:
 
-require(["nbextensions/gist"], function (gist_extension) {
-    console.log('gist extension loaded');
-    gist_extension.load_ipython_extension();
-});
-
-or add the following to your jupyter_notebook_config.py to
-load for every notebook
-
-from notebook.services.config import ConfigManager
-cm = ConfigManager()
-cm.update('notebook', {"load_extensions": {"gist": True}})
+jupyter serverextension enable --py jupyter_notebook_gist
+jupyter nbextension install --py jupyter_notebook_gist
+jupyter nbextension enable --py jupyter_notebook_gist
 */
-
 function get_base_path() {
     var loc = window.location;
     var proto = loc.protocol;
@@ -42,9 +32,10 @@ function is_url_valid(url) {
 }
 
 define([
+    'base/js/namespace',
     'base/js/utils',
     'moment'
-    ], function (utils, moment) {
+], function (Jupyter, utils, moment) {
     var github_redirect_uri = get_base_path() + "/create_gist";
     var gist_notebook = function () {
         // Save the notebook and create a checkpoint to ensure that we create
@@ -66,7 +57,7 @@ define([
     var load_from_url = function() {
         var url = prompt("Enter the URL to a Gist or a .ipynb.");
         if (url == "" || url == null) {
-            // prompt() returns "" if empty value, or null 
+            // prompt() returns "" if empty value, or null
             // if user clicked cancel, want to abort in either case
             return;
         }
@@ -130,10 +121,10 @@ define([
             if (xhr.status == 409) {
                 // 409 Conflict
                 // used if file already exists
-                var newname = prompt("File already exists. Please enter a new name.\nNote: This may overwrite existing files.", 
+                var newname = prompt("File already exists. Please enter a new name.\nNote: This may overwrite existing files.",
                                      name);
                 if (newname == "" || newname == null) {
-                    // prompt() returns "" if empty value, or null 
+                    // prompt() returns "" if empty value, or null
                     // if user clicked cancel, want to abort in either case
                     return;
                 }
@@ -156,7 +147,7 @@ define([
             return;
         };
 
-        var gist_api_url = "https://api.github.com/users/"+github_username+"/gists";
+        var gist_api_url = "https://api.github.com/users/" + github_username + "/gists";
 
         if (!is_url_valid(gist_api_url)) {
             alert('GitHub username is invalid.');
@@ -177,7 +168,7 @@ define([
         xhr.send(null);
     };
 
-    // Listen for the response message containing the user's gists 
+    // Listen for the response message containing the user's gists
     // that is sent from the LoadGistHandler
     var auth_window;
     window.addEventListener('message', function(event) {
@@ -203,7 +194,7 @@ define([
     };
 
 
-    var format_user_gists = function(responseText) { 
+    var format_user_gists = function(responseText) {
         var body = $('<table/>').attr({class: "table", id: "my_table"});
         var head = $('<thead/>');
         var header = $('<tr/>').addClass("row list_header");
@@ -220,7 +211,7 @@ define([
 
         for (var i = 0; i < json_response.length; i++) {
             files = json_response[i].files;
-            // Only load notebook gists 
+            // Only load notebook gists
             if (!files[Object.keys(files)[0]].filename.endsWith('.ipynb')) continue;
             notebook_loaded = true;
 
@@ -231,7 +222,7 @@ define([
                 // less than 24 hours old, use relative date
                 pretty_date = last_updated.fromNow();
             } else {
-                // otherwise show calendar 
+                // otherwise show calendar
                 // <Today | yesterday|...> at hh,mm,ss
                 pretty_date = last_updated.calendar();
             }
@@ -241,7 +232,7 @@ define([
             row.append("<td>" + files[Object.keys(files)[0]].filename + "</td>");
             row.append("<td>" + json_response[i].description + "</td>");
             row.append("<td>" + pretty_date + "</td>");
-            // Create button to load notebook 
+            // Create button to load notebook
             button_td = $('<td/>');
             button = $('<button>Open</button>').addClass("btn btn-default btn-sm");
             button.click({url: json_response[i].html_url}, load_gist_from_click);
@@ -292,7 +283,7 @@ define([
         }
 
         if (!is_valid_client_id(Jupyter.notebook.config.data.oauth_client_id)) {
-            Jupyter.toolbar.add_buttons_group([{    
+            Jupyter.toolbar.add_buttons_group([{
                 'label':    'jupyter-notebook-gist setup',
                 'icon':     'fa-github',
                 'callback': setup_info,

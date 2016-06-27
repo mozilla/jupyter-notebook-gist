@@ -1,0 +1,12 @@
+[run]
+branch = True
+source = jupyter_notebook_gist
+
+[paths]
+source =
+   src/jupyter_notebook_gist
+   .tox/*/lib/python*/site-packages/jupyter_notebook_gist
+   .tox/pypy*/site-packages/jupyter_notebook_gist
+
+[report]
+show_missing = True

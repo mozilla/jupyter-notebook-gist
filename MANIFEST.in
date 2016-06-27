@@ -1,0 +1,3 @@
+include README.md pytest.ini tox.ini
+recursive-include src *.js
+recursive-include tests *.py
