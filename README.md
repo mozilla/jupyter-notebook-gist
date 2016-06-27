@@ -19,7 +19,7 @@ jupyter nbextension list
 jupyter serverextension list
 ```
 
-## Configration
+## Configuration
 
 After installing, edit your `jupyter_notebook_config.py` file to specify the
 GitHub client id and secret.
