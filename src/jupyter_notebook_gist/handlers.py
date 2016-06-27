@@ -29,17 +29,17 @@ def raise_github_error(msg):
 
 class BaseHandler(IPythonHandler):
 
-    def initialize(self, client_id, client_secret):
-        self.client_id = client_id
-        self.client_secret = client_secret
+    def initialize(self, oauth_client_id, oauth_client_secret):
+        self.oauth_client_id = oauth_client_id
+        self.oauth_client_secret = oauth_client_secret
 
     def request_access_token(self, access_code):
         "Request access token from GitHub"
         token_response = requests.post(
             "https://github.com/login/oauth/access_token",
             data={
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
+                "client_id": self.oauth_client_id,
+                "client_secret": self.oauth_client_secret,
                 "code": access_code
             },
             headers={"Accept": "application/json"},

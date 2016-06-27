@@ -1,5 +1,6 @@
 from notebook.utils import url_path_join
 
+from .config import NotebookGist
 from .handlers import GistHandler, DownloadNotebookHandler, LoadGistHandler
 
 
@@ -23,16 +24,19 @@ def _jupyter_server_extension_paths():
 
 def load_jupyter_server_extension(nbapp):
     # Extract our gist client details from the config:
-    config = nbapp.config['NotebookApp']
-
-    web_app = nbapp.web_app
-    url = web_app.settings['base_url']
+    notebook_gist = NotebookGist(
+        # add access to NotebookApp config, too
+        parent=nbapp,
+        # for convinient access to frontend settings
+        config_manager=nbapp.config_manager,
+    )
+    config = notebook_gist.config['NotebookGist']
     params = {
-        'client_id': config['oauth_client_id'],
-        'client_secret': config['oauth_client_secret'],
+        'oauth_client_id': config['oauth_client_id'],
+        'oauth_client_secret': config['oauth_client_secret'],
     }
-
-    web_app.add_handlers(
+    url = nbapp.web_app.settings['base_url']
+    nbapp.web_app.add_handlers(
         r'.*',  # match any host
         [
             (url_path_join(url, '/create_gist'), GistHandler, params),

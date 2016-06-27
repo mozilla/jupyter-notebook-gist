@@ -38,11 +38,8 @@ running `jupyter notebook --generate-config`. You can check the location of
 this file by running `jupyter --config-dir`.
 
 ```python
-from notebook.services.config import ConfigManager
-cm = ConfigManager()
-c.NotebookApp.oauth_client_id = "my_client_id"         # FIXME
-c.NotebookApp.oauth_client_secret = "my_client_secret" # FIXME
-cm.update('notebook', {"oauth_client_id": c.NotebookApp.oauth_client_id})
+c.NotebookGist.oauth_client_id = "my_client_id"         # FIXME
+c.NotebookGist.oauth_client_secret = "my_client_secret" # FIXME
 ```
 
 Replace the vars above with a working GitHub client id and secret. You can
@@ -53,3 +50,10 @@ created by @mreid-moz for testing.
 
 Then run `jupyter notebook` from the repo root.
 
+Alternatively you can also pass the GitHub client id and secret as command
+line parameters when you run the notebook (please fill the placeholders
+accordingly):
+
+```
+jupyter notebook --NotebookGist.oauth_client_id="<my_client_id>" --NotebookGist.oauth_client_secret="<my_client_secret>"
+```
