@@ -19,6 +19,15 @@ jupyter nbextension list
 jupyter serverextension list
 ```
 
+To uninstall the extension run:
+
+```
+jupyter serverextension disable --py jupyter_notebook_gist
+jupyter nbextension disable --py jupyter_notebook_gist
+jupyter nbextension uninstall --py jupyter_notebook_gist
+pip uninstall jupyter-notebook-gist
+```
+
 ## Configuration
 
 After installing, edit your `jupyter_notebook_config.py` file to specify the
@@ -44,11 +53,3 @@ created by @mreid-moz for testing.
 
 Then run `jupyter notebook` from the repo root.
 
-To uninstall the extension run:
-
-```
-jupyter serverextension disable --py jupyter_notebook_gist
-jupyter nbextension disable --py jupyter_notebook_gist
-jupyter nbextension uninstall --py jupyter_notebook_gist
-pip uninstall jupyter-notebook-gist
-```
