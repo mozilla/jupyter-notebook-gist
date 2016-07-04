@@ -1,19 +1,4 @@
-import sys
 from setuptools import find_packages, setup
-
-tests_require = [
-    'coverage>=4.0',
-    'pytest-isort',
-    'pytest-cache>=1.0',
-    'flake8<3.0.0',
-    'pytest-flake8>=0.5',
-    'pytest>=2.8.0',
-    'pytest-wholenodeid',
-]
-
-needs_pytest = set(['pytest', 'test', 'ptr']).intersection(sys.argv)
-pytest_runner = ['pytest-runner'] if needs_pytest else []
-
 
 setup(
     name='jupyter-notebook-gist',
@@ -32,8 +17,6 @@ setup(
         'requests',
         'widgetsnbextension',
     ],
-    setup_requires=[] + pytest_runner,
-    tests_require=tests_require,
     url='https://github.com/mozilla/jupyter-notebook-gist',
     zip_safe=False,
 )
