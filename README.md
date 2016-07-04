@@ -11,12 +11,30 @@ pip install jupyter-notebook-gist
 jupyter serverextension enable --py jupyter_notebook_gist
 jupyter nbextension install --py jupyter_notebook_gist
 jupyter nbextension enable --py jupyter_notebook_gist
+jupyter nbextension enable --py widgetsnbextension
 ```
+
+The last step is needed to enable the `widgetsnbextension` extension that
+Jupyter-Spark depends on. It may have been enabled before by a different
+extension.
+
+You may want to append ``--user`` to the commands above if you're getting
+configuration errors upon invoking them.
+
 To double-check if the extension was correctly installed run:
 
 ```
 jupyter nbextension list
 jupyter serverextension list
+```
+
+To uninstall the extension run:
+
+```
+jupyter serverextension disable --py jupyter_notebook_gist
+jupyter nbextension disable --py jupyter_notebook_gist
+jupyter nbextension uninstall --py jupyter_notebook_gist
+pip uninstall jupyter-notebook-gist
 ```
 
 ## Configuration
@@ -29,11 +47,8 @@ running `jupyter notebook --generate-config`. You can check the location of
 this file by running `jupyter --config-dir`.
 
 ```python
-from notebook.services.config import ConfigManager
-cm = ConfigManager()
-c.NotebookApp.oauth_client_id = "my_client_id"         # FIXME
-c.NotebookApp.oauth_client_secret = "my_client_secret" # FIXME
-cm.update('notebook', {"oauth_client_id": c.NotebookApp.oauth_client_id})
+c.NotebookGist.oauth_client_id = "my_client_id"         # FIXME
+c.NotebookGist.oauth_client_secret = "my_client_secret" # FIXME
 ```
 
 Replace the vars above with a working GitHub client id and secret. You can
@@ -44,11 +59,10 @@ created by @mreid-moz for testing.
 
 Then run `jupyter notebook` from the repo root.
 
-To uninstall the extension run:
+Alternatively you can also pass the GitHub client id and secret as command
+line parameters when you run the notebook (please fill the placeholders
+accordingly):
 
 ```
-jupyter serverextension disable --py jupyter_notebook_gist
-jupyter nbextension disable --py jupyter_notebook_gist
-jupyter nbextension uninstall --py jupyter_notebook_gist
-pip uninstall jupyter-notebook-gist
+jupyter notebook --NotebookGist.oauth_client_id="<my_client_id>" --NotebookGist.oauth_client_secret="<my_client_secret>"
 ```
