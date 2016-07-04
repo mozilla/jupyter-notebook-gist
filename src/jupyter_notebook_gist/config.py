@@ -6,15 +6,13 @@ class NotebookGist(LoggingConfigurable):
 
     oauth_client_id = Unicode(
         '',
-        config=True,
         help='The GitHub application OAUTH client ID',
-    )
+    ).tag(config=True)
 
     oauth_client_secret = Unicode(
         '',
-        config=True,
         help='The GitHub application OAUTH client secret',
-    )
+    ).tag(config=True)
 
     def __init__(self, *args, **kwargs):
         self.config_manager = kwargs.pop('config_manager')
