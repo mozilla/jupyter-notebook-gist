@@ -19,6 +19,9 @@ else:
     string_types = (basestring,)  # noqa
 
 
+request_session = requests.Session()
+
+
 def raise_error(msg):
     raise HTTPError(500, "ERROR: " + msg)
 
@@ -35,7 +38,7 @@ class BaseHandler(IPythonHandler):
 
     def request_access_token(self, access_code):
         "Request access token from GitHub"
-        token_response = requests.post(
+        token_response = request_session.post(
             "https://github.com/login/oauth/access_token",
             data={
                 "client_id": self.oauth_client_id,
@@ -44,8 +47,7 @@ class BaseHandler(IPythonHandler):
             },
             headers={"Accept": "application/json"},
         )
-        token_args = json.loads(token_response.text)
-        return helper_request_access_token(token_args)
+        return helper_request_access_token(token_response.json())
 
 
 class GistHandler(BaseHandler):
@@ -125,10 +127,10 @@ class DownloadNotebookHandler(IPythonHandler):
             if not force_download:
                 raise HTTPError(409, "ERROR: File already exists.")
 
-        r = requests.get(nb_url, stream=True)
+        response = request_session.get(nb_url, stream=True)
         with open(file_path, 'wb') as fd:
             # TODO: check if this is a good chunk size
-            for chunk in r.iter_content(1024):
+            for chunk in response.iter_content(1024):
                 fd.write(chunk)
 
         self.write(nb_name)
@@ -148,8 +150,8 @@ class LoadGistHandler(BaseHandler):
         github_headers = {"Accept": "application/json",
                           "Authorization": "token " + access_token}
 
-        response = requests.get("https://api.github.com/gists",
-                                headers=github_headers)
+        response = request_session.get("https://api.github.com/gists",
+                                       headers=github_headers)
         response_to_send = bytearray(response.text, 'utf-8')
         self.write("<script>var gists = '")
         self.write(base64.standard_b64encode(response_to_send))
@@ -266,8 +268,9 @@ def find_existing_gist_by_name(nb_filename, py_filename, access_token):
     github_headers = {"Accept": "application/json",
                       "Authorization": "token " + access_token}
 
-    response = requests.get(GITHUB_API_ROOT + "/gists", headers=github_headers)
-    gist_args = json.loads(response.text)
+    response = request_session.get(GITHUB_API_ROOT + "/gists",
+                                   headers=github_headers)
+    gist_args = response.json()
 
     return helper_find_existing_gist_by_name(gist_args, nb_filename,
                                              py_filename)
@@ -299,10 +302,11 @@ def create_new_gist(gist_contents, access_token):
     github_headers = {"Accept": "application/json",
                       "Authorization": "token " + access_token}
 
-    gist_response = requests.post(GITHUB_API_ROOT + "/gists",
-                                  data=json.dumps(gist_contents),
-                                  headers=github_headers)
-
+    gist_response = request_session.post(
+        GITHUB_API_ROOT + "/gists",
+        data=json.dumps(gist_contents),
+        headers=github_headers,
+    )
     return gist_response
 
 
@@ -310,9 +314,11 @@ def edit_existing_gist(gist_contents, gist_id, access_token):
     github_headers = {"Accept": "application/json",
                       "Authorization": "token " + access_token}
 
-    gist_response = requests.patch(GITHUB_API_ROOT + "/gists/" + gist_id,
-                                   data=json.dumps(gist_contents),
-                                   headers=github_headers)
+    gist_response = request_session.patch(
+        GITHUB_API_ROOT + "/gists/" + gist_id,
+        data=json.dumps(gist_contents),
+        headers=github_headers,
+    )
     return gist_response
 
 
