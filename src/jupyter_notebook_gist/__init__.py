@@ -27,7 +27,7 @@ def load_jupyter_server_extension(nbapp):
     notebook_gist = NotebookGist(
         # add access to NotebookApp config, too
         parent=nbapp,
-        # for convinient access to frontend settings
+        # for convenient access to frontend settings
         config_manager=nbapp.config_manager,
     )
     config = notebook_gist.config['NotebookGist']
