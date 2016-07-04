@@ -4,9 +4,6 @@ import os
 import unittest
 
 import tornado
-from nbformat import write
-from nbformat.v4 import new_markdown_cell, new_notebook
-
 from jupyter_notebook_gist.handlers import (extract_code_from_args,
                                             extract_notebook_path_from_args,
                                             get_notebook_contents,
@@ -15,6 +12,8 @@ from jupyter_notebook_gist.handlers import (extract_code_from_args,
                                             helper_request_access_token,
                                             raise_error, raise_github_error,
                                             verify_gist_response)
+from nbformat import write
+from nbformat.v4 import new_markdown_cell, new_notebook
 
 
 class TestError(unittest.TestCase):
