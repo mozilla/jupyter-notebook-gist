@@ -1,5 +1,9 @@
 ### jupyter-notebook-gist
 
+[![Build Status](https://travis-ci.org/mozilla/jupyter-notebook-gist.svg?branch=master)](https://travis-ci.org/mozilla/jupyter-notebook-gist)
+
+[![codecov](https://codecov.io/gh/mozilla/jupyter-notebook-gist/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla/jupyter-notebook-gist)
+
 Create a gist from the Jupyter Notebook UI.
 
 ## Installation
@@ -15,8 +19,8 @@ jupyter nbextension enable --py widgetsnbextension
 ```
 
 The last step is needed to enable the `widgetsnbextension` extension that
-Jupyter-Spark depends on. It may have been enabled before by a different
-extension.
+Jupyter-Notebook-Gist depends on. It may have been enabled before by a
+different extension.
 
 You may want to append ``--user`` to the commands above if you're getting
 configuration errors upon invoking them.
@@ -66,3 +70,31 @@ accordingly):
 ```
 jupyter notebook --NotebookGist.oauth_client_id="<my_client_id>" --NotebookGist.oauth_client_secret="<my_client_secret>"
 ```
+
+## Changelog
+
+### 0.4.0 (2016-07-06)
+
+- Refactored config system to be able to configure it via CLI options or
+  config values in `~/.jupyter/jupyter_notebook_config.py`
+
+- Fixed a bunch of Python packaging and code quality issues
+
+- Fixed a few issues in Python test suite
+
+- Set up continuous integration: https://travis-ci.org/mozilla/jupyter-notebook-gist
+
+- Set up code coverage reports: https://codecov.io/gh/mozilla/jupyter-notebook-gist
+
+- **IMPORTANT** Requires manual step to enable after running pip install
+  (see installation docs)!
+
+  To update:
+
+  1. Run `pip uninstall jupyter-notebook-gist`
+  2. Delete `gist.js` from your `nbextensions` folder.
+  3. Delete any references to `jupyter-notebook-gist.create_gist` in
+     `jupyter_notebook_config.json` (in your .jupyter directory)
+  4. Delete any references to `gist` in `notebook.json`
+     (in .jupyter/nbconfig)
+  5. Follow installation instructions to reinstall
