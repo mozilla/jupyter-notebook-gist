@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='jupyter-notebook-gist',
-    version='0.4.0a2',
+    version='0.4.0',
     description='Create a gist from the Jupyter Notebook UI',
     author='Mozilla Firefox Data Platform',
     author_email='fx-data-platform@mozilla.com',
