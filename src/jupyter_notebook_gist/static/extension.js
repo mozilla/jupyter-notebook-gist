@@ -42,7 +42,7 @@ define([
         // the gist using the most up-to-date content
         Jupyter.notebook.save_checkpoint();
 
-        var github_client_id = Jupyter.notebook.config.get('oauth_client_id');
+        var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
         // Get notebook path and encode it in base64
         // Characters like # get decoded by the github API and will mess up
         // getting the file path on the server if we use URI percent encoding,
@@ -186,7 +186,7 @@ define([
     var load_all_user_gists = function () {
         var redirect_uri = get_base_path() + "/load_user_gists"
 
-        var github_client_id = Jupyter.notebook.config.get('oauth_client_id');
+        var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
         var nb_path = window.btoa(Jupyter.notebook.base_url + Jupyter.notebook.notebook_path);
 
         auth_window = window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
@@ -282,8 +282,7 @@ define([
             return;
         }
 
-        var github_client_id = Jupyter.notebook.config.get('oauth_client_id');
-        if (!is_valid_client_id(github_client_id)) {
+        if (!is_valid_client_id(Jupyter.notebook.config.data.oauth_client_id)) {
             Jupyter.toolbar.add_buttons_group([{
                 'label':    'jupyter-notebook-gist setup',
                 'icon':     'fa-github',
