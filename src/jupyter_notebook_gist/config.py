@@ -1,3 +1,4 @@
+import six
 from traitlets.config import LoggingConfigurable
 from traitlets.traitlets import Unicode
 
@@ -20,7 +21,7 @@ class NotebookGist(LoggingConfigurable):
         # update the frontend settings with the currently passed
         # OAUTH client id
         client_id = self.config.NotebookGist.oauth_client_id
-        if not isinstance(client_id, (str, bytes)):
+        if not isinstance(client_id, six.string_types):
             client_id = None
         self.config_manager.update('notebook', {
             'oauth_client_id': client_id,
