@@ -6,9 +6,7 @@ python:
   - 3.6
   - pypy
 sudo: false
-cache:
-  directories:
-  - "~/.cache/pip"
+cache: pip
 install:
   - pip install tox codecov
 script:
