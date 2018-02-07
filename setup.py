@@ -12,7 +12,7 @@ setup(
     license='MPL2',
     install_requires=[
         'ipython >= 4',
-        'notebook >= 4.2',
+        'notebook >= 4.3.1',
         'jupyter',
         'requests',
         'six',
