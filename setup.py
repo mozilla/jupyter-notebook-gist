@@ -15,6 +15,7 @@ setup(
         'notebook >= 4.2',
         'jupyter',
         'requests',
+        'six',
         'widgetsnbextension',
     ],
     url='https://github.com/mozilla/jupyter-notebook-gist',
