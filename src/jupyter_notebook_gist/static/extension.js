@@ -109,20 +109,24 @@ define([
     }
 
     var download_nb_on_server = function(url, name, force_download) {
-        var xhr = new XMLHttpRequest();
         var nb_info = {
             nb_url: url,
             nb_name: window.btoa(name),
             force_download: force_download
         }
-        xhr.open("POST",  "/download_notebook", true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onload = function () {
+        utils.ajax({
+            url: "/download_notebook",
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify(nb_info)
+        }).fail(function(xhr, textStatus) {
             if (xhr.status == 409) {
                 // 409 Conflict
                 // used if file already exists
-                var newname = prompt("File already exists. Please enter a new name.\nNote: This may overwrite existing files.",
-                                     name);
+                var newname = prompt(
+                    "File already exists. Please enter a new name.\n" +
+                    "Note: This may overwrite existing files.",
+                    name);
                 if (newname == "" || newname == null) {
                     // prompt() returns "" if empty value, or null
                     // if user clicked cancel, want to abort in either case
@@ -130,12 +134,12 @@ define([
                 }
                 download_nb_on_server(url, newname, true);
             } else if (xhr.status == 200) {
-                window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + encodeURIComponent(this.responseText));
+                window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + \
+                            encodeURIComponent(this.responseText));
             } else if (xhr.status == 400) {
                 alert("File did not download");
             }
-        };
-        xhr.send(JSON.stringify(nb_info));
+        });
     }
 
     var load_public_user_gists = function() {
