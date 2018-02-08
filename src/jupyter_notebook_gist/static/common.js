@@ -1,58 +1,48 @@
-/*
-Run to enable this:
-
-jupyter serverextension enable --py jupyter_notebook_gist
-jupyter nbextension install --py jupyter_notebook_gist
-jupyter nbextension enable --py jupyter_notebook_gist
-*/
-function get_base_path() {
-    var loc = window.location;
-    var proto = loc.protocol;
-    var host = loc.hostname;
-    var port = loc.port;
-
-    var base = proto + "//" + host;
-    if (parseInt(port) != 80) {
-        base += ":" + port;
-    }
-    return base;
-}
-
-function url_path_split(path) {
-    var idx = path.lastIndexOf('/');
-    if (idx === -1) {
-        return ['', path];
-    } else {
-        return [ path.slice(0, idx), path.slice(idx + 1) ];
-    }
-}
-
-function is_url_valid(url) {
-    return /^(https?|s?ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(url);
-}
-
 define([
     'base/js/namespace',
     'base/js/utils',
-    'moment'
-], function (Jupyter, utils, moment) {
+    'moment',
+    'services/config'
+], function(Jupyter, utils, moment, config) {
+    function get_base_path() {
+        var loc = window.location;
+        var proto = loc.protocol;
+        var host = loc.hostname;
+        var port = loc.port;
+
+        var base = proto + "//" + host;
+        if (parseInt(port) != 80) {
+            base += ":" + port;
+        }
+        return base;
+    }
+
+    function url_path_split(path) {
+        var idx = path.lastIndexOf('/');
+        if (idx === -1) {
+            return ['.', path];
+        } else {
+            return [ path.slice(0, idx), path.slice(idx + 1) ];
+        }
+    }
+
+    function is_url_valid(url) {
+        return /^(https?|s?ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(url);
+    }
+
     var github_redirect_uri = get_base_path() + "/create_gist";
-    var gist_notebook = function () {
-        // Save the notebook and create a checkpoint to ensure that we create
-        // the gist using the most up-to-date content
-        Jupyter.notebook.save_checkpoint();
 
-        var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
-        // Get notebook path and encode it in base64
-        // Characters like # get decoded by the github API and will mess up
-        // getting the file path on the server if we use URI percent encoding,
-        // so we use base64 instead
-        var nb_path = window.btoa(Jupyter.notebook.base_url + Jupyter.notebook.notebook_path);
-
-        // Start OAuth dialog
-        window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
-          "&scope=gist&redirect_uri=" + github_redirect_uri + "?nb_path=" + nb_path);
-    };
+    // Get the server side path to download to.
+    var get_download_path = function() {
+        if (Jupyter.hasOwnProperty('notebook')) {
+            // On a notebook page
+            return url_path_split(Jupyter.notebook.notebook_path)[0];
+        } else if (Jupyter.hasOwnProperty('notebook_list')) {
+            return Jupyter.notebook_list.notebook_path;
+        } else {
+            return '';
+        }
+    }
 
     var load_from_url = function() {
         var url = prompt("Enter the URL to a Gist or a .ipynb.");
@@ -111,7 +101,7 @@ define([
     var download_nb_on_server = function(url, name, force_download) {
         var nb_info = {
             nb_url: url,
-            nb_name: window.btoa(name),
+            nb_name: window.btoa(get_download_path() + '/' + name),
             force_download: force_download
         }
         utils.ajax({
@@ -134,8 +124,8 @@ define([
                 }
                 download_nb_on_server(url, newname, true);
             } else if (xhr.status == 200) {
-                window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + \
-                            encodeURIComponent(this.responseText));
+                window.open(
+                    '/notebooks/' + encodeURIComponent(xhr.responseText));
             } else if (xhr.status == 400) {
                 alert("File did not download");
             }
@@ -177,6 +167,7 @@ define([
     var auth_window;
     window.addEventListener('message', function(event) {
         if (event.origin != get_base_path()) return;
+        if (auth_window === undefined) return;
         auth_window.close();
         Jupyter.dialog.modal({
             title: "All User Gists",
@@ -188,15 +179,13 @@ define([
     });
 
     var load_all_user_gists = function () {
-        var redirect_uri = get_base_path() + "/load_user_gists"
-
-        var github_client_id = Jupyter.notebook.config.data.oauth_client_id;
-        var nb_path = window.btoa(Jupyter.notebook.base_url + Jupyter.notebook.notebook_path);
-
-        auth_window = window.open("https://github.com/login/oauth/authorize?client_id=" + github_client_id +
-                                  "&scope=gist&redirect_uri=" + redirect_uri, "", "width=550, height=500");
+        var redirect_uri = get_base_path() + "/load_user_gists";
+        get_client_id(function(client_id) {
+            auth_window = window.open(
+                "https://github.com/login/oauth/authorize?client_id=" + client_id +
+                    "&scope=gist&redirect_uri=" + redirect_uri, "", "width=550, height=500");
+        });
     };
-
 
     var format_user_gists = function(responseText) {
         var body = $('<table/>').attr({class: "table", id: "my_table"});
@@ -273,6 +262,18 @@ define([
         });
     }
 
+    var get_client_id = function(callback) {
+        var common_options = {
+            base_url: utils.get_body_data("baseUrl"),
+            notebook_path: utils.get_body_data("notebookPath"),
+        };
+        var cfg = new config.ConfigSection('notebook', common_options);
+        cfg.loaded.then(function() {
+            callback(cfg.data.oauth_client_id);
+        });
+        cfg.load();
+    }
+
     var is_valid_client_id = function(client_id) {
         if (client_id === "my_client_id" || client_id === null || client_id === undefined) {
             return false;
@@ -280,55 +281,13 @@ define([
         return true;
     }
 
-    var gist_button = function () {
-        if (!Jupyter.toolbar) {
-            $([Jupyter.events]).on("app_initialized.NotebookApp", gist_button);
-            return;
-        }
-
-        if (!is_valid_client_id(Jupyter.notebook.config.data.oauth_client_id)) {
-            Jupyter.toolbar.add_buttons_group([{
-                'label':    'jupyter-notebook-gist setup',
-                'icon':     'fa-github',
-                'callback': setup_info,
-                'id':       'setup_info'
-            }]);
-
-            return;
-        }
-
-        if ($("#gist_notebook").length === 0) {
-            Jupyter.toolbar.add_buttons_group([
-                {
-                    'label'   : 'save notebook as gist',
-                    'icon'    : 'fa-github',
-                    'callback': gist_notebook,
-                    'id'      : 'gist_notebook'
-                }, {
-                    'label'   : 'load notebook from URL',
-                    'icon'    : 'fa-link',
-                    'callback': load_from_url,
-                    'id'      : 'load_notebook_from_url'
-                }, {
-                    'label'   : 'load public user gists',
-                    'icon'    : 'fa-list-alt',
-                    'callback': load_public_user_gists,
-                    'id'      : 'load_public_user_gists',
-                }, {
-                    'label'   : 'load all user gists',
-                    'icon'    : 'fa-list',
-                    'callback': load_all_user_gists,
-                    'id'      : 'load_all_user_gists',
-                }
-            ]);
-        }
-    };
-
-    var load_ipython_extension = function () {
-        gist_button();
-    };
-
     return {
-        load_ipython_extension: load_ipython_extension
+        github_redirect_uri: github_redirect_uri,
+        load_from_url: load_from_url,
+        load_public_user_gists: load_public_user_gists,
+        load_all_user_gists: load_all_user_gists,
+        get_client_id: get_client_id,
+        is_valid_client_id: is_valid_client_id,
+        setup_info: setup_info
     };
 });

@@ -12,8 +12,21 @@ def _jupyter_nbextension_paths():
         # directory in the `nbextension/` namespace
         'dest': 'jupyter-notebook-gist',
         # _also_ in the `nbextension/` namespace
-        'require': 'jupyter-notebook-gist/extension',
-    }]
+        'require': 'jupyter-notebook-gist/notebook-extension'
+    },
+    {
+        'section': 'tree',
+        'src': 'static',
+        'dest': 'jupyter-notebook-gist',
+        'require': 'jupyter-notebook-gist/tree-extension'
+    },
+    {
+        'section': 'common',
+        'src': 'static',
+        'dest': 'jupyter-notebook-gist',
+        'require': 'jupyter-notebook-gist/common'
+    },
+    ]
 
 
 def _jupyter_server_extension_paths():
