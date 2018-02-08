@@ -5,27 +5,28 @@ from .handlers import GistHandler, DownloadNotebookHandler, LoadGistHandler
 
 
 def _jupyter_nbextension_paths():
-    return [{
-        'section': 'notebook',
-        # the path is relative to the `jupyter_notebook_gist` directory
-        'src': 'static',
-        # directory in the `nbextension/` namespace
-        'dest': 'jupyter-notebook-gist',
-        # _also_ in the `nbextension/` namespace
-        'require': 'jupyter-notebook-gist/notebook-extension'
-    },
-    {
-        'section': 'tree',
-        'src': 'static',
-        'dest': 'jupyter-notebook-gist',
-        'require': 'jupyter-notebook-gist/tree-extension'
-    },
-    {
-        'section': 'common',
-        'src': 'static',
-        'dest': 'jupyter-notebook-gist',
-        'require': 'jupyter-notebook-gist/common'
-    },
+    return [
+        {
+            'section': 'notebook',
+            # the path is relative to the `jupyter_notebook_gist` directory
+            'src': 'static',
+            # directory in the `nbextension/` namespace
+            'dest': 'jupyter-notebook-gist',
+            # _also_ in the `nbextension/` namespace
+            'require': 'jupyter-notebook-gist/notebook-extension'
+        },
+        {
+            'section': 'tree',
+            'src': 'static',
+            'dest': 'jupyter-notebook-gist',
+            'require': 'jupyter-notebook-gist/tree-extension'
+        },
+        {
+            'section': 'common',
+            'src': 'static',
+            'dest': 'jupyter-notebook-gist',
+            'require': 'jupyter-notebook-gist/common'
+        },
     ]
 
 
