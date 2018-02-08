@@ -73,6 +73,27 @@ jupyter notebook --NotebookGist.oauth_client_id="<my_client_id>" --NotebookGist.
 
 ## Changelog
 
+### Master
+
+- Buttons for loading gists are now available on the "tree" (file manager) page
+  in Jupyter.
+
+- **IMPORTANT** Requires manual step to enable after running pip install
+  (see installation docs)!
+
+  To update:
+
+  1. Fully uninstall the extension first:
+
+    ```
+    jupyter serverextension disable --py jupyter_notebook_gist
+    jupyter nbextension disable --py jupyter_notebook_gist
+    jupyter nbextension uninstall --py jupyter_notebook_gist
+    pip uninstall jupyter-notebook-gist
+    ```
+
+  2. Follow the instructions above to reinstall
+
 ### 0.4.0 (2016-07-06)
 
 - Refactored config system to be able to configure it via CLI options or
