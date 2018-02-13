@@ -134,8 +134,7 @@ define([
                 }
                 download_nb_on_server(url, newname, true);
             } else if (xhr.status == 200) {
-                window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + \
-                            encodeURIComponent(this.responseText));
+                window.open(url_path_split(Jupyter.notebook.notebook_path)[0] + encodeURIComponent(this.responseText));
             } else if (xhr.status == 400) {
                 alert("File did not download");
             }

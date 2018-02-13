@@ -9,10 +9,9 @@ matrix:
   include:
   - env: eslint
     sudo: false
-    language: javascript
     install:
       - nvm install 8
-      - npm install eslint
+      - npm install
     script:
       - node ./node_modules/eslint/bin/eslint.js --ext .js src/jupyter_notebook_gist/static
 sudo: false
@@ -23,3 +22,5 @@ script:
   - tox -v -e py
 after_success:
   - codecov
+allow_failures:
+  - env: eslint
