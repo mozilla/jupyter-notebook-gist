@@ -5,6 +5,16 @@ python:
   - 3.5
   - 3.6
   - pypy
+matrix:
+  include:
+  - env: eslint
+    sudo: false
+    language: javascript
+    install:
+      - nvm install 8
+      - npm install eslint
+    script:
+      - node ./node_modules/eslint/bin/eslint.js --ext .js src/jupyter_notebook_gist/static
 sudo: false
 cache: pip
 install:
