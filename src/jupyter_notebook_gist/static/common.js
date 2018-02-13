@@ -17,26 +17,20 @@ define([
         return base;
     }
 
-    function url_path_split(path) {
-        var idx = path.lastIndexOf('/');
-        if (idx === -1) {
-            return ['.', path];
-        } else {
-            return [ path.slice(0, idx), path.slice(idx + 1) ];
-        }
-    }
-
     function is_url_valid(url) {
         return /^(https?|s?ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(url);
     }
 
-    var github_redirect_uri = get_base_path() + "/create_gist";
+    var github_redirect_uri = (
+        get_base_path() +
+        utils.get_body_data("baseUrl") +
+        "create_gist");
 
     // Get the server side path to download to.
     var get_download_path = function() {
         if (Jupyter.hasOwnProperty('notebook')) {
             // On a notebook page
-            return url_path_split(Jupyter.notebook.notebook_path)[0];
+            return utils.url_path_split(Jupyter.notebook.notebook_path)[0];
         } else if (Jupyter.hasOwnProperty('notebook_list')) {
             return Jupyter.notebook_list.notebook_path;
         } else {
@@ -101,7 +95,8 @@ define([
     var download_nb_on_server = function(url, name, force_download) {
         var nb_info = {
             nb_url: url,
-            nb_name: window.btoa(get_download_path() + '/' + name),
+            nb_name: window.btoa(
+                utils.url_path_join(get_download_path(), name)),
             force_download: force_download
         }
         utils.ajax({
@@ -125,7 +120,10 @@ define([
                 download_nb_on_server(url, newname, true);
             } else if (xhr.status == 200) {
                 window.open(
-                    '/notebooks/' + encodeURIComponent(xhr.responseText));
+                    utils.url_path_join(
+                        utils.get_body_data("baseUrl"),
+                        'notebooks',
+                        encodeURIComponent(xhr.responseText)));
             } else if (xhr.status == 400) {
                 alert("File did not download");
             }
@@ -179,7 +177,10 @@ define([
     });
 
     var load_all_user_gists = function () {
-        var redirect_uri = get_base_path() + "/load_user_gists";
+        var redirect_uri = (
+            get_base_path() +
+                utils.get_body_data("baseUrl") +
+                "load_user_gists");
         get_client_id(function(client_id) {
             auth_window = window.open(
                 "https://github.com/login/oauth/authorize?client_id=" + client_id +
