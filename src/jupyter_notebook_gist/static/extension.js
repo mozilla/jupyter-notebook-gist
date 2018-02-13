@@ -148,13 +148,13 @@ define([
         if (github_username == "" || github_username == null) {
             // Do not send a request if user did not input anything
             return;
-        };
+        }
 
         var gist_api_url = "https://api.github.com/users/" + github_username + "/gists";
 
         if (!is_url_valid(gist_api_url)) {
             alert('GitHub username is invalid.');
-        };
+        }
 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", gist_api_url, true);
@@ -242,7 +242,7 @@ define([
             button.appendTo(button_td);
             row.append(button_td);
             body.append(row);
-        };
+        }
 
         // Inform user if no public notebooks were found
         if (!notebook_loaded) {
