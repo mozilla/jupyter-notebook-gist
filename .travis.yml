@@ -9,6 +9,7 @@ matrix:
   include:
   - env: eslint
     sudo: false
+    cache: npm
     install:
       - nvm install 8
       - npm install
