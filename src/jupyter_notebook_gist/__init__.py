@@ -1,7 +1,10 @@
-from notebook.utils import url_path_join
+from pkg_resources import get_distribution, DistributionNotFound
 
-from .config import NotebookGist
-from .handlers import GistHandler, DownloadNotebookHandler, LoadGistHandler
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+    # package is not installed
+    pass
 
 
 def _jupyter_nbextension_paths():
@@ -37,6 +40,11 @@ def _jupyter_server_extension_paths():
 
 
 def load_jupyter_server_extension(nbapp):
+    from notebook.utils import url_path_join
+
+    from .config import NotebookGist
+    from .handlers import GistHandler, DownloadNotebookHandler, LoadGistHandler
+
     # Extract our gist client details from the config:
     notebook_gist = NotebookGist(
         # add access to NotebookApp config, too

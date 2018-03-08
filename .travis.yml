@@ -1,15 +1,29 @@
 language: python
-python:
-  - 2.7
-  - 3.4
-  - 3.5
-  - 3.6
-  - pypy
 sudo: false
 cache: pip
+python:
+- '2.7'
+- '3.4'
+- '3.5'
+- '3.6'
+- pypy
 install:
-  - pip install tox codecov
+- pip install tox-travis
 script:
-  - tox -v -e py
+- tox -v
 after_success:
-  - codecov
+- bash <(curl -s https://codecov.io/bash)
+jobs:
+  include:
+  - stage: deploy
+    python: '3.5'
+    script: skip
+    deploy:
+      provider: pypi
+      user: jezdez
+      password:
+        secure: ViRTTMj8HW1zlR4/FYqNO86pSPIWYWq5FTp527yo9lQ9TPqX0uWmOlVvLOhY/mQDAWvbq1F2KaLds4o1Gl2QadsnToxmze6oqp9yam4XlNdekD8P3IBjOfuRBlE9pOG5VHae/U7bh6hneKAa5WEMYM1bu1mvMGQVtn+BHMgmiTBt1x8soUwqxNQfesKHnerf4ApdlpiZQqLY+PLGK823lwvX8BIa1UGtyExdPASAOks8EAruiC4tQynnHBsMRAM/TJsy5hqX22wNZvScWt+0TjVFID6N2FOl74cWxpPWTgLVa0Lm7dpy+LniU59nfOtCdA1R4oe/Q7V1VdPZAfiz7jrzBl4bbZngZXgbFWF4qMy4mV9CPtukKZqowfKnyIk9jRWAsmnmhzbJ23/UFW78SJDTrUSE2oQjlRA1vz5CX0MIF3K9RHqAanLh861odDZjruOSKJFbl/AIIFMHeOAHBAxGePxiGYHr8KWCLjMbthLJ1oHt4rn24tg3i2v3PEKT3HEEBnSz2AslgScDIK12lTwBDr47iXfC6uQlY+tZ05P6TnuAX+9z6+gjNZyU/GV+AwCUXkZ7K1p0A7cw+OEYMYMvm6NHmWg5TsYSZzfpNR04VFqEuXoojN2jBvV7IFcLL+DOmzVlRpdEGiiOk41THdlyJSmruobIwfQvaWQ3o28=
+      distributions: sdist bdist_wheel
+      on:
+        tags: true
+        repo: mozilla/jupyter-notebook-gist

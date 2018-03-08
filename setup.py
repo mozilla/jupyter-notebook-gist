@@ -2,7 +2,11 @@ from setuptools import find_packages, setup
 
 setup(
     name='jupyter-notebook-gist',
-    version='0.4.0',
+    use_scm_version={
+        'version_scheme': 'post-release',
+        'local_scheme': 'dirty-tag'
+    },
+    setup_requires=['setuptools_scm'],
     description='Create a gist from the Jupyter Notebook UI',
     author='Mozilla Firefox Data Platform',
     author_email='fx-data-platform@mozilla.com',
