@@ -1,5 +1,6 @@
 ### jupyter-notebook-gist
 
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 [![Build Status](https://travis-ci.org/mozilla/jupyter-notebook-gist.svg?branch=master)](https://travis-ci.org/mozilla/jupyter-notebook-gist)
 [![codecov](https://codecov.io/gh/mozilla/jupyter-notebook-gist/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla/jupyter-notebook-gist)
 
